@@ -13,7 +13,7 @@ const personaApi = {
    */
   export(id, options) {
     return request({
-      url: `/persona/${id}/export`,
+      url: `/api/persona/${id}/export`,
       method: 'post',
       data: options,
       responseType: 'blob'
@@ -28,7 +28,7 @@ const personaApi = {
    */
   generate(data) {
     return request({
-      url: '/persona/generate',
+      url: '/api/persona/generate',
       method: 'post',
       data
     });
@@ -44,7 +44,7 @@ const personaApi = {
    */
   getList(params) {
     return request({
-      url: '/persona/list',
+      url: '/api/persona/list',
       method: 'get',
       params
     });
@@ -56,7 +56,7 @@ const personaApi = {
    */
   getDetail(id) {
     return request({
-      url: `/persona/${id}`,
+      url: `/api/persona/${id}`,
       method: 'get'
     });
   },
@@ -78,7 +78,7 @@ const personaApi = {
    */
   update(id, data) {
     return request({
-      url: `/persona/${id}`,
+      url: `/api/persona/${id}`,
       method: 'put',
       data
     });
@@ -90,7 +90,7 @@ const personaApi = {
    */
   delete(id) {
     return request({
-      url: `/persona/${id}`,
+      url: `/api/persona/${id}`,
       method: 'delete'
     });
   },
@@ -104,7 +104,7 @@ const personaApi = {
    */
   batchGenerate(data) {
     return request({
-      url: '/persona/batch-generate',
+      url: '/api/persona/batch-generate',
       method: 'post',
       data
     });
@@ -116,7 +116,7 @@ const personaApi = {
    */
   getBatchStatus(batchId) {
     return request({
-      url: `/persona/batch/${batchId}`,
+      url: `/api/persona/batch/${batchId}`,
       method: 'get'
     });
   },
@@ -127,7 +127,7 @@ const personaApi = {
    */
   getBatchResults(batchId) {
     return request({
-      url: `/persona/batch/${batchId}/results`,
+      url: `/api/persona/batch/${batchId}/results`,
       method: 'get'
     });
   },
@@ -138,7 +138,7 @@ const personaApi = {
    */
   getBatchList(projectId) {
     return request({
-      url: '/persona/batches',
+      url: '/api/persona/batches',
       method: 'get',
       params: { projectId }
     });
@@ -150,7 +150,7 @@ const personaApi = {
    */
   cancelBatch(batchId) {
     return request({
-      url: `/persona/batch/${batchId}`,
+      url: `/api/persona/batch/${batchId}`,
       method: 'delete'
     });
   }

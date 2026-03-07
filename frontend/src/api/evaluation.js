@@ -12,7 +12,7 @@ const evaluationApi = {
    */
   evaluatePersona(personaId, data) {
     return request({
-      url: `/evaluation/persona/${personaId}`,
+      url: `/api/evaluation/persona/${personaId}`,
       method: 'post',
       data
     });
@@ -27,7 +27,7 @@ const evaluationApi = {
    */
   getHistory(personaId, params) {
     return request({
-      url: `/evaluation/history/${personaId}`,
+      url: `/api/evaluation/history/${personaId}`,
       method: 'get',
       params
     });
@@ -39,7 +39,7 @@ const evaluationApi = {
    */
   getStatistics(projectId) {
     return request({
-      url: `/evaluation/statistics/${projectId}`,
+      url: `/api/evaluation/statistics/${projectId}`,
       method: 'get'
     });
   }

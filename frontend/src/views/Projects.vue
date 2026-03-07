@@ -144,7 +144,7 @@ const fetchProjects = async () => {
   loading.value = true
   try {
     const res = await request.get('/api/projects')
-    projects.value = res.data?.projects || []
+    projects.value = res.data.projects || []
   } catch (error) {
     console.error('获取项目列表失败:', error)
   } finally {

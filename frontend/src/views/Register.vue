@@ -80,15 +80,17 @@ const handleRegister = async () => {
 
   loading.value = true
   try {
-    const { data } = await request.post('/api/users/register', {
+    const response = await request.post('/api/users/register', {
       username: registerForm.username,
       email: registerForm.email,
       password: registerForm.password
     })
 
+    console.log('Register response:', response)
+
     // 保存 token 和用户信息
-    localStorage.setItem('token', data.token)
-    localStorage.setItem('user', JSON.stringify(data.user))
+    localStorage.setItem('token', response.data.token)
+    localStorage.setItem('user', JSON.stringify(response.data.user))
 
     ElMessage.success('注册成功')
     router.push('/projects')

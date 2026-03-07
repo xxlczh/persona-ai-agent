@@ -28,7 +28,6 @@ router.post('/persona/:id', async (req, res) => {
     // 保存评估结果到数据库
     const evaluation = await Evaluation.create({
       persona_id: id,
-      project_id: persona.project_id,
       overall_score: evaluationResult.overall_score,
       overall_level: evaluationResult.overall_level,
       completeness_score: evaluationResult.dimensions.completeness.score,
@@ -125,15 +124,44 @@ router.get('/statistics/:projectId', async (req, res) => {
       });
     }
 
-    // 获取项目的所有评估记录
-    const evaluations = await Evaluation.findAll({
-      where: { project_id: projectId },
-      order: [['created_at', 'DESC']]
-    });
-
     // 获取项目下的所有画像
     const personas = await Persona.findAll({
       where: { project_id: projectId }
+    });
+
+    // 如果没有画像，返回空统计
+    if (personas.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          project_id: parseInt(projectId),
+          total_personas: 0,
+          total_evaluations: 0,
+          average_score: 0,
+          score_distribution: {
+            excellent: 0,
+            good: 0,
+            fair: 0,
+            poor: 0
+          },
+          dimension_averages: {
+            completeness: 0,
+            consistency: 0,
+            authenticity: 0,
+            actionability: 0
+          },
+          latest_evaluations: []
+        }
+      });
+    }
+
+    // 获取项目下所有画像的评估记录
+    const personaIds = personas.map(p => p.id);
+    const evaluations = await Evaluation.findAll({
+      where: {
+        persona_id: { [require('sequelize').Op.in]: personaIds }
+      },
+      order: [['created_at', 'DESC']]
     });
 
     if (evaluations.length === 0) {

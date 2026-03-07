@@ -13,7 +13,7 @@ import request from './request';
  */
 export const getDataSources = (params) => {
   return request({
-    url: '/datasources',
+    url: '/api/datasources',
     method: 'get',
     params
   });
@@ -25,7 +25,7 @@ export const getDataSources = (params) => {
  */
 export const getDataSourceById = (id) => {
   return request({
-    url: `/datasources/${id}`,
+    url: `/api/datasources/${id}`,
     method: 'get'
   });
 };
@@ -36,7 +36,7 @@ export const getDataSourceById = (id) => {
  */
 export const uploadDataSource = (formData) => {
   return request({
-    url: '/datasources',
+    url: '/api/datasources',
     method: 'post',
     data: formData,
     headers: {
@@ -52,7 +52,7 @@ export const uploadDataSource = (formData) => {
  */
 export const updateDataSource = (id, data) => {
   return request({
-    url: `/datasources/${id}`,
+    url: `/api/datasources/${id}`,
     method: 'put',
     data
   });
@@ -64,7 +64,7 @@ export const updateDataSource = (id, data) => {
  */
 export const deleteDataSource = (id) => {
   return request({
-    url: `/datasources/${id}`,
+    url: `/api/datasources/${id}`,
     method: 'delete'
   });
 };

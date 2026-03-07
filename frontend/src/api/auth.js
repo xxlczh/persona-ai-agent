@@ -14,7 +14,7 @@ const authApi = {
    */
   register(data) {
     return request({
-      url: '/users/register',
+      url: '/api/users/register',
       method: 'post',
       data
     });
@@ -28,7 +28,7 @@ const authApi = {
    */
   login(data) {
     return request({
-      url: '/users/login',
+      url: '/api/users/login',
       method: 'post',
       data
     });
@@ -39,7 +39,7 @@ const authApi = {
    */
   getCurrentUser() {
     return request({
-      url: '/users/me',
+      url: '/api/users/me',
       method: 'get'
     });
   },
@@ -52,7 +52,7 @@ const authApi = {
    */
   updateProfile(data) {
     return request({
-      url: '/users/me',
+      url: '/api/users/me',
       method: 'put',
       data
     });
@@ -66,7 +66,7 @@ const authApi = {
    */
   changePassword(data) {
     return request({
-      url: '/users/me/password',
+      url: '/api/users/me/password',
       method: 'put',
       data
     });

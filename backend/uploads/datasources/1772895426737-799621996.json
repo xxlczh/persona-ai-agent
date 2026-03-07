@@ -1,0 +1,7 @@
+[
+  {"user_id": "U001", "name": "Alice", "age": 28, "gender": "female", "city": "Beijing", "occupation": "Product Manager", "interests": ["technology", "reading", "travel"]},
+  {"user_id": "U002", "name": "Bob", "age": 35, "gender": "male", "city": "Shanghai", "occupation": "Software Engineer", "interests": ["coding", "gaming"]},
+  {"user_id": "U003", "name": "Charlie", "age": 42, "gender": "male", "city": "Guangzhou", "occupation": "Sales Director", "interests": ["business", "networking"]},
+  {"user_id": "U004", "name": "Diana", "age": 26, "gender": "female", "city": "Shenzhen", "occupation": "Designer", "interests": ["art", "photography", "music"]},
+  {"user_id": "U005", "name": "Ethan", "age": 31, "gender": "male", "city": "Hangzhou", "occupation": "Data Analyst", "interests": ["data", "statistics", "AI"]}
+]

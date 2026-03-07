@@ -13,7 +13,7 @@ const projectApi = {
    */
   getList(params) {
     return request({
-      url: '/projects',
+      url: '/api/projects',
       method: 'get',
       params
     });
@@ -25,7 +25,7 @@ const projectApi = {
    */
   getDetail(id) {
     return request({
-      url: `/projects/${id}`,
+      url: `/api/projects/${id}`,
       method: 'get'
     });
   },
@@ -40,7 +40,7 @@ const projectApi = {
    */
   create(data) {
     return request({
-      url: '/projects',
+      url: '/api/projects',
       method: 'post',
       data
     });
@@ -58,7 +58,7 @@ const projectApi = {
    */
   update(id, data) {
     return request({
-      url: `/projects/${id}`,
+      url: `/api/projects/${id}`,
       method: 'put',
       data
     });
@@ -70,7 +70,7 @@ const projectApi = {
    */
   delete(id) {
     return request({
-      url: `/projects/${id}`,
+      url: `/api/projects/${id}`,
       method: 'delete'
     });
   },
@@ -81,7 +81,7 @@ const projectApi = {
    */
   archive(id) {
     return request({
-      url: `/projects/${id}/archive`,
+      url: `/api/projects/${id}/archive`,
       method: 'post'
     });
   }
