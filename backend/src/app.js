@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/profiles', require('./routes/profiles'));
+app.use('/api/datasources', require('./routes/datasources'));
 app.use('/api/health', require('./routes/health'));
 
 // Error handling middleware
