@@ -330,3 +330,16 @@
 状态: completed
 任务ID: 26
 ========================================
+
+## [2026-03-07 20:35] 任务 27: 批量生成功能
+
+- 状态: 完成
+- 提交: 待提交
+- 备注: 
+  - 创建 BatchGenerationService 批量生成队列服务
+  - 实现批量生成 API 接口 POST /api/persona/batch-generate
+  - 实现进度查询 API GET /api/persona/batch/:batchId
+  - 实现结果查询 API GET /api/persona/batch/:batchId/results
+  - 实现批量任务列表 API GET /api/persona/batches
+  - 创建前端 BatchGenerator.vue 组件
+  - 集成到 ProjectDetail.vue 页面

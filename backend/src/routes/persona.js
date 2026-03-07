@@ -2,8 +2,196 @@ const express = require('express');
 const router = express.Router();
 const { Persona, Project } = require('../models');
 const PersonaGenerationService = require('../services/PersonaGenerationService');
+const BatchGenerationService = require('../services/BatchGenerationService');
 const cacheService = require('../services/CacheService');
 const ExportService = require('../services/ExportService');
+
+// ==================== 批量生成路由（放在 /:id 之前）====================
+
+/**
+ * POST /api/persona/batch-generate
+ * 批量生成画像
+ */
+router.post('/batch-generate', async (req, res) => {
+  try {
+    const { projectId, tasks, config } = req.body;
+
+    if (!projectId) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少 projectId 参数'
+      });
+    }
+
+    if (!tasks || !Array.isArray(tasks) || tasks.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少 tasks 参数或格式错误'
+      });
+    }
+
+    if (tasks.length > 50) {
+      return res.status(400).json({
+        success: false,
+        message: '批量生成数量不能超过 50 个'
+      });
+    }
+
+    // 验证项目是否存在
+    const project = await Project.findByPk(projectId);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: '项目不存在'
+      });
+    }
+
+    // 创建批量生成任务
+    const result = await BatchGenerationService.createBatch(projectId, tasks, config || {});
+
+    res.status(201).json({
+      success: true,
+      message: '批量生成任务已创建',
+      data: result
+    });
+  } catch (error) {
+    console.error('批量生成失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '批量生成失败',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/persona/batch/:batchId
+ * 获取批量生成进度
+ */
+router.get('/batch/:batchId', async (req, res) => {
+  try {
+    const { batchId } = req.params;
+
+    const status = BatchGenerationService.getBatchStatus(batchId);
+
+    if (!status) {
+      return res.status(404).json({
+        success: false,
+        message: '批量生成任务不存在'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: '获取成功',
+      data: status
+    });
+  } catch (error) {
+    console.error('获取批量生成进度失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取批量生成进度失败',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/persona/batch/:batchId/results
+ * 获取批量生成结果
+ */
+router.get('/batch/:batchId/results', async (req, res) => {
+  try {
+    const { batchId } = req.params;
+
+    const results = await BatchGenerationService.getBatchResults(batchId);
+
+    if (!results) {
+      return res.status(404).json({
+        success: false,
+        message: '批量生成任务不存在'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: '获取成功',
+      data: results
+    });
+  } catch (error) {
+    console.error('获取批量生成结果失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取批量生成结果失败',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/persona/batches
+ * 获取项目所有批量生成任务
+ */
+router.get('/batches', async (req, res) => {
+  try {
+    const { projectId } = req.query;
+
+    if (!projectId) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少 projectId 参数'
+      });
+    }
+
+    const batches = BatchGenerationService.getProjectBatches(parseInt(projectId));
+
+    res.json({
+      success: true,
+      message: '获取成功',
+      data: batches
+    });
+  } catch (error) {
+    console.error('获取批量生成任务列表失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取批量生成任务列表失败',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * DELETE /api/persona/batch/:batchId
+ * 取消批量生成任务
+ */
+router.delete('/batch/:batchId', async (req, res) => {
+  try {
+    const { batchId } = req.params;
+
+    const success = BatchGenerationService.cancelBatch(batchId);
+
+    if (!success) {
+      return res.status(400).json({
+        success: false,
+        message: '无法取消任务（任务可能已完成或不存在）'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: '已取消批量生成任务'
+    });
+  } catch (error) {
+    console.error('取消批量生成任务失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '取消批量生成任务失败',
+      error: error.message
+    });
+  }
+});
+
+// ==================== 其他路由 ====================
 
 /**
  * POST /api/persona/generate

@@ -93,6 +93,66 @@ const personaApi = {
       url: `/persona/${id}`,
       method: 'delete'
     });
+  },
+
+  /**
+   * 批量生成画像
+   * @param {Object} data - 批量生成信息
+   * @param {number|string} data.projectId - 项目 ID
+   * @param {Array} data.tasks - 任务列表
+   * @param {Object} [data.config] - 生成配置
+   */
+  batchGenerate(data) {
+    return request({
+      url: '/persona/batch-generate',
+      method: 'post',
+      data
+    });
+  },
+
+  /**
+   * 获取批量生成进度
+   * @param {string} batchId - 批次 ID
+   */
+  getBatchStatus(batchId) {
+    return request({
+      url: `/persona/batch/${batchId}`,
+      method: 'get'
+    });
+  },
+
+  /**
+   * 获取批量生成结果
+   * @param {string} batchId - 批次 ID
+   */
+  getBatchResults(batchId) {
+    return request({
+      url: `/persona/batch/${batchId}/results`,
+      method: 'get'
+    });
+  },
+
+  /**
+   * 获取项目批量生成任务列表
+   * @param {number|string} projectId - 项目 ID
+   */
+  getBatchList(projectId) {
+    return request({
+      url: '/persona/batches',
+      method: 'get',
+      params: { projectId }
+    });
+  },
+
+  /**
+   * 取消批量生成任务
+   * @param {string} batchId - 批次 ID
+   */
+  cancelBatch(batchId) {
+    return request({
+      url: `/persona/batch/${batchId}`,
+      method: 'delete'
+    });
   }
 };
 
