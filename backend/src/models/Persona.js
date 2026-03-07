@@ -96,7 +96,14 @@ const Persona = sequelize.define('Persona', {
 }, {
   tableName: 'personas',
   timestamps: true,
-  underscored: true
+  underscored: true,
+  indexes: [
+    { fields: ['project_id'] },
+    { fields: ['status'] },
+    { fields: ['created_at'] },
+    { fields: ['project_id', 'status'] },
+    { fields: ['project_id', 'created_at'] }
+  ]
 });
 
 module.exports = Persona;

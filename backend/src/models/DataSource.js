@@ -69,7 +69,12 @@ const DataSource = sequelize.define('DataSource', {
 }, {
   tableName: 'data_sources',
   timestamps: true,
-  underscored: true
+  underscored: true,
+  indexes: [
+    { fields: ['project_id'] },
+    { fields: ['status'] },
+    { fields: ['project_id', 'status'] }
+  ]
 });
 
 module.exports = DataSource;

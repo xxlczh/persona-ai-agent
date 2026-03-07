@@ -9,6 +9,9 @@ class CacheService {
     this.defaultTTL = 3600; // 默认缓存时间 1 小时
     this.personaTTL = 1800; // 画像缓存时间 30 分钟
     this.listTTL = 600; // 列表缓存时间 10 分钟
+    this.llmTTL = 7200; // LLM 响应缓存 2 小时
+    this.statsTTL = 300; // 统计数据缓存 5 分钟
+    this.projectTTL = 1800; // 项目缓存 30 分钟
   }
 
   /**
@@ -91,6 +94,8 @@ class CacheService {
     }
   }
 
+  // ==================== 画像缓存 ====================
+
   /**
    * 设置画像缓存
    * @param {number} id 画像ID
@@ -145,6 +150,94 @@ class CacheService {
     return this.delByPattern('persona:*');
   }
 
+  // ==================== 项目缓存 ====================
+
+  /**
+   * 设置项目缓存
+   * @param {number} id 项目ID
+   * @param {any} data 项目数据
+   */
+  async setProject(id, data) {
+    const key = `project:${id}`;
+    return this.set(key, data, this.projectTTL);
+  }
+
+  /**
+   * 获取项目缓存
+   * @param {number} id 项目ID
+   */
+  async getProject(id) {
+    const key = `project:${id}`;
+    return this.get(key);
+  }
+
+  /**
+   * 删除项目缓存
+   * @param {number} id 项目ID
+   */
+  async delProject(id) {
+    const key = `project:${id}`;
+    return this.del(key);
+  }
+
+  /**
+   * 清除项目列表缓存
+   */
+  async clearProjectCache() {
+    return this.delByPattern('project:*');
+  }
+
+  // ==================== LLM 响应缓存 ====================
+
+  /**
+   * 设置 LLM 响应缓存
+   * @param {string} promptHash prompt 哈希
+   * @param {any} data 响应数据
+   */
+  async setLLMResponse(promptHash, data) {
+    const key = `llm:${promptHash}`;
+    return this.set(key, data, this.llmTTL);
+  }
+
+  /**
+   * 获取 LLM 响应缓存
+   * @param {string} promptHash prompt 哈希
+   */
+  async getLLMResponse(promptHash) {
+    const key = `llm:${promptHash}`;
+    return this.get(key);
+  }
+
+  // ==================== 统计数据缓存 ====================
+
+  /**
+   * 设置统计数据缓存
+   * @param {string} key 统计键
+   * @param {any} data 统计数据
+   */
+  async setStats(key, data) {
+    const cacheKey = `stats:${key}`;
+    return this.set(cacheKey, data, this.statsTTL);
+  }
+
+  /**
+   * 获取统计数据缓存
+   * @param {string} key 统计键
+   */
+  async getStats(key) {
+    const cacheKey = `stats:${key}`;
+    return this.get(cacheKey);
+  }
+
+  /**
+   * 清除统计数据缓存
+   */
+  async clearStatsCache() {
+    return this.delByPattern('stats:*');
+  }
+
+  // ==================== 工具方法 ====================
+
   /**
    * 生成列表缓存键
    * @param {object} params 查询参数
@@ -152,6 +245,15 @@ class CacheService {
   generateListCacheKey(params) {
     const { projectId, status, page, pageSize } = params;
     return `${projectId || 'all'}:${status || 'all'}:${page}:${pageSize}`;
+  }
+
+  /**
+   * 生成 LLM prompt 哈希键
+   * @param {string} prompt prompt 内容
+   */
+  generateLLMHash(prompt) {
+    const crypto = require('crypto');
+    return crypto.createHash('md5').update(prompt).digest('hex');
   }
 }
 

@@ -64,7 +64,13 @@ const Evaluation = sequelize.define('Evaluation', {
 }, {
   tableName: 'evaluations',
   timestamps: true,
-  underscored: true
+  underscored: true,
+  indexes: [
+    { fields: ['persona_id'] },
+    { fields: ['project_id'] },
+    { fields: ['overall_score'] },
+    { fields: ['persona_id', 'project_id'] }
+  ]
 });
 
 module.exports = Evaluation;

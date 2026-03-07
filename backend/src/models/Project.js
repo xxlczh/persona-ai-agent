@@ -44,7 +44,13 @@ const Project = sequelize.define('Project', {
 }, {
   tableName: 'projects',
   timestamps: true,
-  underscored: true
+  underscored: true,
+  indexes: [
+    { fields: ['owner_id'] },
+    { fields: ['status'] },
+    { fields: ['created_at'] },
+    { fields: ['owner_id', 'status'] }
+  ]
 });
 
 module.exports = Project;

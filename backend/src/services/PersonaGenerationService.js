@@ -237,7 +237,7 @@ class PersonaGenerationService {
 
   /**
    * 完整生成模式
-   * 分维度生成画像
+   * 分维度生成画像（并行优化版本）
    */
   async generateComprehensive(sourceData, config) {
     await this.initLLM(config.modelType || 'openai');
@@ -245,44 +245,32 @@ class PersonaGenerationService {
     // 合并所有数据源
     const combinedData = this.combineSourceData(sourceData);
 
-    // 1. 生成人口统计特征
+    const llmOptions = {
+      temperature: config.temperature || 0.7,
+      max_tokens: config.max_tokens || 1500
+    };
+
+    // 构建所有 prompts
     const demographicPrompt = PersonaPrompts.getDemographicPrompt(combinedData);
-    const demographicResponse = await this.llmProvider.chat([demographicPrompt], {
-      temperature: config.temperature || 0.7,
-      max_tokens: config.max_tokens || 1000
-    });
-    const demographic = this.parseJSONResponse(demographicResponse);
-
-    // 2. 生成行为特征
     const behavioralPrompt = PersonaPrompts.getBehavioralPrompt(combinedData);
-    const behavioralResponse = await this.llmProvider.chat([behavioralPrompt], {
-      temperature: config.temperature || 0.7,
-      max_tokens: config.max_tokens || 1500
-    });
-    const behavioral = this.parseJSONResponse(behavioralResponse);
-
-    // 3. 生成心理特征
     const psychologicalPrompt = PersonaPrompts.getPsychologicalPrompt(combinedData);
-    const psychologicalResponse = await this.llmProvider.chat([psychologicalPrompt], {
-      temperature: config.temperature || 0.7,
-      max_tokens: config.max_tokens || 1500
-    });
-    const psychological = this.parseJSONResponse(psychologicalResponse);
-
-    // 4. 生成需求特征
     const needsPrompt = PersonaPrompts.getNeedsPrompt(combinedData);
-    const needsResponse = await this.llmProvider.chat([needsPrompt], {
-      temperature: config.temperature || 0.7,
-      max_tokens: config.max_tokens || 1500
-    });
-    const needs = this.parseJSONResponse(needsResponse);
-
-    // 5. 生成场景特征
     const scenarioPrompt = PersonaPrompts.getScenarioPrompt(combinedData);
-    const scenarioResponse = await this.llmProvider.chat([scenarioPrompt], {
-      temperature: config.temperature || 0.7,
-      max_tokens: config.max_tokens || 1500
-    });
+
+    // 并行调用 LLM（优化性能）
+    const [demographicResponse, behavioralResponse, psychologicalResponse, needsResponse, scenarioResponse] = await Promise.all([
+      this.llmProvider.chat([demographicPrompt], llmOptions),
+      this.llmProvider.chat([behavioralPrompt], llmOptions),
+      this.llmProvider.chat([psychologicalPrompt], llmOptions),
+      this.llmProvider.chat([needsPrompt], llmOptions),
+      this.llmProvider.chat([scenarioPrompt], llmOptions)
+    ]);
+
+    // 解析各维度结果
+    const demographic = this.parseJSONResponse(demographicResponse);
+    const behavioral = this.parseJSONResponse(behavioralResponse);
+    const psychological = this.parseJSONResponse(psychologicalResponse);
+    const needs = this.parseJSONResponse(needsResponse);
     const scenario = this.parseJSONResponse(scenarioResponse);
 
     // 6. 综合生成最终画像
