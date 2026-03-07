@@ -146,7 +146,7 @@
       "实现 PUT /api/persona/:id",
       "实现 DELETE /api/persona/:id"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "12",
