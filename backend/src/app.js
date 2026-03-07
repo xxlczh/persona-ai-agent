@@ -2,6 +2,10 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+const { logger } = require('./utils/logger');
+const requestLogger = require('./middleware/requestLogger');
+const errorLogger = require('./middleware/errorLogger');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -9,6 +13,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 请求日志中间件
+app.use(requestLogger);
 
 // Routes
 app.use('/api/users', require('./routes/users'));
@@ -19,9 +26,12 @@ app.use('/api/persona', require('./routes/persona'));
 app.use('/api/evaluation', require('./routes/evaluation'));
 app.use('/api/health', require('./routes/health'));
 
+// Error logging middleware
+app.use(errorLogger);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error(err.message, { stack: err.stack });
   res.status(500).json({
     success: false,
     message: 'Internal server error',
@@ -39,8 +49,8 @@ app.use((req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Server is running on port ${PORT}`);
+  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app;

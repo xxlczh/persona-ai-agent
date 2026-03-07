@@ -283,3 +283,10 @@
 状态: completed
 任务ID: 22
 ========================================
+
+## 2026-03-07 20:00 - 任务 23: 日志记录模块
+- 状态: 完成
+- 提交: (待提交)
+- 备注: 使用 winston 库创建日志配置 (utils/logger.js)，实现请求日志中间件 (middleware/requestLogger.js) 记录每个HTTP请求，实现错误日志中间件 (middleware/errorLogger.js) 捕获并记录所有错误，创建操作日志工具类 (utils/operationLogger.js) 用于记录业务操作日志。日志文件保存在 backend/logs 目录，包含 combined.log, error.log, request.log, operation.log。已集成到 app.js 中，代码通过 lint 检查。
+========================================
+========================================
