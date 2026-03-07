@@ -3,6 +3,7 @@ const User = require('./User');
 const Project = require('./Project');
 const DataSource = require('./DataSource');
 const Persona = require('./Persona');
+const Evaluation = require('./Evaluation');
 
 // 建立关联关系
 User.hasMany(Project, { foreignKey: 'owner_id', as: 'projects' });
@@ -16,10 +17,19 @@ DataSource.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
 Project.hasMany(Persona, { foreignKey: 'project_id', as: 'personas' });
 Persona.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
 
+// Persona 与 Evaluation 关联
+Persona.hasMany(Evaluation, { foreignKey: 'persona_id', as: 'evaluations' });
+Evaluation.belongsTo(Persona, { foreignKey: 'persona_id', as: 'persona' });
+
+// Project 与 Evaluation 关联
+Project.hasMany(Evaluation, { foreignKey: 'project_id', as: 'evaluations' });
+Evaluation.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
+
 module.exports = {
   sequelize,
   User,
   Project,
   DataSource,
-  Persona
+  Persona,
+  Evaluation
 };

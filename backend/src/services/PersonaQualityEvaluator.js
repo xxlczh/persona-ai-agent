@@ -143,7 +143,7 @@ class PersonaQualityEvaluator {
     for (const check of checks) {
       const isFilled = check.value &&
         (Array.isArray(check.value) ? check.value.length > 0 :
-         (typeof check.value === 'string' ? check.value.trim() !== '' : true));
+          (typeof check.value === 'string' ? check.value.trim() !== '' : true));
 
       totalWeight += check.weight;
       if (isFilled) filledWeight += check.weight;

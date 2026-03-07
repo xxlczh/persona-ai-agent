@@ -16,6 +16,7 @@ app.use('/api/projects', require('./routes/projects'));
 app.use('/api/profiles', require('./routes/profiles'));
 app.use('/api/datasources', require('./routes/datasources'));
 app.use('/api/persona', require('./routes/persona'));
+app.use('/api/evaluation', require('./routes/evaluation'));
 app.use('/api/health', require('./routes/health'));
 
 // Error handling middleware

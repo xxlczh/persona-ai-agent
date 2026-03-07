@@ -184,7 +184,7 @@
       "实现 GET /api/evaluation/history/:personaId",
       "实现 GET /api/evaluation/statistics/:projectId"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "15",
