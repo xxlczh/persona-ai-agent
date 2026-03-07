@@ -16,7 +16,11 @@
           </el-tab-pane>
           <el-tab-pane label="画像生成" name="generation">
             <div class="tab-content">
-              <p>画像生成</p>
+              <PersonaGenerator
+                v-if="projectId"
+                :project-id="projectId"
+                @generated="handlePersonaGenerated"
+              />
             </div>
           </el-tab-pane>
           <el-tab-pane label="质量评估" name="evaluation">
@@ -34,6 +38,7 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import DataSourceManager from '@/components/DataSourceManager.vue'
+import PersonaGenerator from '@/components/PersonaGenerator.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -46,6 +51,11 @@ const projectId = computed(() => {
 
 const goBack = () => {
   router.push('/projects')
+}
+
+const handlePersonaGenerated = (persona) => {
+  console.log('画像生成成功:', persona)
+  // 可以跳转到画像列表或质量评估
 }
 </script>
 
