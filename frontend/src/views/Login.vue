@@ -49,14 +49,14 @@ const handleLogin = async () => {
 
   loading.value = true
   try {
-    const { data } = await request.post('/api/users/login', {
+    const data = await request.post('/api/users/login', {
       username: loginForm.username,
       password: loginForm.password
     })
 
     // 保存 token 和用户信息
-    localStorage.setItem('token', data.token)
-    localStorage.setItem('user', JSON.stringify(data.user))
+    localStorage.setItem('token', data.data.token)
+    localStorage.setItem('user', JSON.stringify(data.data.user))
 
     ElMessage.success('登录成功')
     router.push('/projects')

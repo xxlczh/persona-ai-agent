@@ -193,9 +193,9 @@ const fetchStatistics = async () => {
   loading.value = true
   try {
     const res = await evaluationApi.getStatistics(props.projectId)
-    if (res.data.success) {
-      statistics.value = res.data.data
-      latestEvaluations.value = res.data.data.latest_evaluations || []
+    if (res.success) {
+      statistics.value = res.data
+      latestEvaluations.value = res.data.latest_evaluations || []
     }
   } catch (error) {
     console.error('获取评估统计失败:', error)

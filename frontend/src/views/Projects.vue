@@ -4,7 +4,30 @@
       <el-header>
         <div class="header-content">
           <h2>项目管理</h2>
-          <el-button type="primary" @click="dialogVisible = true">新建项目</el-button>
+          <div class="header-right">
+            <el-button type="primary" @click="dialogVisible = true">新建项目</el-button>
+            <el-dropdown @command="handleUserCommand">
+              <div class="user-dropdown">
+                <el-avatar :size="36" class="user-avatar">
+                  {{ currentUser.username?.charAt(0).toUpperCase() }}
+                </el-avatar>
+                <span class="username">{{ currentUser.nickname || currentUser.username }}</span>
+                <el-icon><arrow-down /></el-icon>
+              </div>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="profile">
+                    <el-icon><User /></el-icon>
+                    个人主页
+                  </el-dropdown-item>
+                  <el-dropdown-item command="logout" divided>
+                    <el-icon><SwitchButton /></el-icon>
+                    退出登录
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </div>
       </el-header>
       <el-main>
@@ -29,7 +52,7 @@
               </template>
               <p>{{ project.description || '暂无描述' }}</p>
               <div class="project-info">
-                <span>创建时间: {{ formatDate(project.created_at) }}</span>
+                <span>创建时间: {{ formatDate(project.createdAt) }}</span>
               </div>
             </el-card>
           </el-col>
@@ -59,9 +82,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { ArrowDown, User, SwitchButton } from '@element-plus/icons-vue'
 import request from '@/api/request'
 
 const router = useRouter()
@@ -71,6 +95,36 @@ const loading = ref(true)
 const dialogVisible = ref(false)
 const submitting = ref(false)
 const formRef = ref(null)
+
+// 当前用户信息
+const currentUser = reactive({
+  username: '',
+  nickname: '',
+  email: ''
+})
+
+// 获取当前用户信息
+const getCurrentUser = () => {
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    const user = JSON.parse(userStr)
+    currentUser.username = user.username
+    currentUser.nickname = user.nickname
+    currentUser.email = user.email
+  }
+}
+
+// 处理用户菜单命令
+const handleUserCommand = (command) => {
+  if (command === 'profile') {
+    router.push('/profile')
+  } else if (command === 'logout') {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    ElMessage.success('已退出登录')
+    router.push('/login')
+  }
+}
 
 const projectForm = ref({
   name: '',
@@ -89,8 +143,8 @@ const rules = {
 const fetchProjects = async () => {
   loading.value = true
   try {
-    const { data } = await request.get('/api/projects')
-    projects.value = data.projects || []
+    const res = await request.get('/api/projects')
+    projects.value = res.data?.projects || []
   } catch (error) {
     console.error('获取项目列表失败:', error)
   } finally {
@@ -150,6 +204,7 @@ const getStatusText = (status) => {
 }
 
 onMounted(() => {
+  getCurrentUser()
   fetchProjects()
 })
 </script>
@@ -173,6 +228,35 @@ onMounted(() => {
   margin: 0;
   font-size: 20px;
   color: #333;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.user-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.user-dropdown:hover {
+  background-color: #f5f7fa;
+}
+
+.user-avatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.username {
+  color: #333;
+  font-size: 14px;
 }
 
 .loading-container,
