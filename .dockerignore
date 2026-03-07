@@ -1,0 +1,16 @@
+# Docker ignore
+node_modules
+.git
+.gitignore
+*.md
+tests/
+automation-logs/
+*.log
+.env
+.env.local
+.vscode/
+.idea/
+dist/
+coverage/
+*.tmp
+.DS_Store

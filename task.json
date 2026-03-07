@@ -386,7 +386,7 @@
       "配置 Nginx",
       "创建部署脚本"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "31",
