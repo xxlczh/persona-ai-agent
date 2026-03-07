@@ -236,7 +236,7 @@
       "集成 API",
       "页面测试"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "19",

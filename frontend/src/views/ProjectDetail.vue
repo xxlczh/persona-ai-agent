@@ -11,7 +11,7 @@
         <el-tabs v-model="activeTab">
           <el-tab-pane label="数据源" name="sources">
             <div class="tab-content">
-              <p>数据源管理</p>
+              <DataSourceManager v-if="projectId" :project-id="projectId" />
             </div>
           </el-tab-pane>
           <el-tab-pane label="画像生成" name="generation">
@@ -31,13 +31,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import DataSourceManager from '@/components/DataSourceManager.vue'
 
 const router = useRouter()
 const route = useRoute()
 
 const activeTab = ref('sources')
+
+const projectId = computed(() => {
+  return parseInt(route.params.id) || null
+})
 
 const goBack = () => {
   router.push('/projects')
