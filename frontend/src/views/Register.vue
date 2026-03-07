@@ -33,6 +33,7 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
 const router = useRouter()
 const formRef = ref(null)
@@ -71,13 +72,31 @@ const rules = {
   ]
 }
 
+const loading = ref(false)
+
 const handleRegister = async () => {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
 
-  // TODO: 实现注册逻辑
-  ElMessage.success('注册成功')
-  router.push('/login')
+  loading.value = true
+  try {
+    const { data } = await request.post('/api/users/register', {
+      username: registerForm.username,
+      email: registerForm.email,
+      password: registerForm.password
+    })
+
+    // 保存 token 和用户信息
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('user', JSON.stringify(data.user))
+
+    ElMessage.success('注册成功')
+    router.push('/projects')
+  } catch (error) {
+    console.error('注册失败:', error)
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

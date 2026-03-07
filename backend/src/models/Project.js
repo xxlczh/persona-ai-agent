@@ -22,6 +22,7 @@ const Project = sequelize.define('Project', {
   owner_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    field: 'user_id',
     references: {
       model: 'users',
       key: 'id'

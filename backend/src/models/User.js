@@ -29,6 +29,7 @@ const User = sequelize.define('User', {
   password: {
     type: DataTypes.STRING(255),
     allowNull: false,
+    field: 'password_hash',
     validate: {
       notEmpty: true
     }
@@ -40,6 +41,7 @@ const User = sequelize.define('User', {
   avatar: {
     type: DataTypes.STRING(255),
     allowNull: true,
+    field: 'avatar_url',
     defaultValue: null
   },
   role: {

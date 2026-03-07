@@ -128,6 +128,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import evaluationApi from '@/api/evaluation'
 import ScoreChart from './ScoreChart.vue'
 import EvaluationDetail from './EvaluationDetail.vue'

@@ -1,5 +1,6 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
+const { Op } = require('sequelize');
 const { Project, User } = require('../models');
 const { authenticate } = require('../middleware/auth');
 
@@ -80,7 +81,7 @@ router.get('/', authenticate, async (req, res) => {
 
     // 非管理员只能看到自己的项目
     if (req.user.role !== 'admin') {
-      where.status = { ['$ne$']: 'deleted' };
+      where.status = { [Op.ne]: 'deleted' };
     } else if (status) {
       where.status = status;
     }
