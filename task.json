@@ -326,7 +326,7 @@
       "创建评估状态 store",
       "持久化状态"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "26",

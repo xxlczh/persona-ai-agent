@@ -305,3 +305,8 @@
 状态: completed
 任务ID: 24
 ========================================
+
+## 2026-03-07 20:15 - 任务 25: 前端状态管理
+- 状态: 完成
+- 提交: (待提交)
+- 备注: 使用 Pinia 创建 4 个状态 store：用户状态 store (stores/user.js) 包含登录、注册、获取用户信息、登出等功能；项目状态 store (stores/project.js) 包含项目列表、详情、创建、更新、删除、归档功能；画像状态 store (stores/persona.js) 包含画像列表、详情、生成、更新、删除功能；评估状态 store (stores/evaluation.js) 包含评估、评估历史、统计功能。安装 pinia-plugin-persistedstate@3 实现状态持久化，更新 main.js 集成持久化插件。创建 stores/index.js 统一导出所有 store。代码通过 lint 检查和 build 构建。
