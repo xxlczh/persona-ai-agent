@@ -78,7 +78,7 @@
       "实现密码加密",
       "编写 API 文档"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "7",
