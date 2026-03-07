@@ -223,7 +223,7 @@
       "封装画像 API",
       "封装评估 API"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "18",
