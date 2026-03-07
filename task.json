@@ -50,7 +50,7 @@
       "创建 Redis 配置文件",
       "测试数据库连接"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "5",
