@@ -278,3 +278,8 @@
 - 提交: (待提交)
 - 备注: ioredis 已在 package.json 中，Redis 配置文件已存在。创建缓存服务类 (services/CacheService.js)，实现 set/get/del/delByPattern/exists 等基础方法，以及画像缓存 (setPersona/getPersona/delPersona) 和列表缓存 (setPersonaList/getPersonaList/clearPersonaCache)。在画像接口 (routes/persona.js) 中集成缓存：GET /list 和 GET /:id 使用缓存，PUT 和 DELETE 清除缓存。代码通过 lint 检查。
 ========================================
+========================================
+迭代 #1 - 2026-03-07 19:57:35
+状态: completed
+任务ID: 22
+========================================
