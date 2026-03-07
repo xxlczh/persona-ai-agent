@@ -398,6 +398,6 @@
       "编写部署文档",
       "编写使用手册"
     ],
-    "passes": false
+    "passes": true
   }
 ]
