@@ -3,6 +3,7 @@ const router = express.Router();
 const { Persona, Project } = require('../models');
 const PersonaGenerationService = require('../services/PersonaGenerationService');
 const cacheService = require('../services/CacheService');
+const ExportService = require('../services/ExportService');
 
 /**
  * POST /api/persona/generate
@@ -266,6 +267,63 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       message: '删除画像失败',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/persona/:id/export
+ * 导出画像
+ */
+router.post('/:id/export', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { format = 'json', content = [] } = req.body;
+
+    if (!['json', 'markdown', 'pdf'].includes(format)) {
+      return res.status(400).json({
+        success: false,
+        message: '不支持的导出格式'
+      });
+    }
+
+    let data;
+    let contentType;
+    let fileName;
+
+    const persona = await Persona.findByPk(id);
+    if (!persona) {
+      return res.status(404).json({
+        success: false,
+        message: '画像不存在'
+      });
+    }
+
+    fileName = `${persona.name || 'persona'}`;
+
+    if (format === 'json') {
+      data = await ExportService.exportJson(id, content);
+      contentType = 'application/json';
+      fileName += '.json';
+    } else if (format === 'markdown') {
+      data = await ExportService.exportMarkdown(id, content);
+      contentType = 'text/markdown';
+      fileName += '.md';
+    } else if (format === 'pdf') {
+      data = await ExportService.exportPdf(id, content);
+      contentType = 'application/pdf';
+      fileName += '.pdf';
+    }
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName)}"`);
+    res.send(data);
+  } catch (error) {
+    console.error('导出画像失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '导出画像失败',
       error: error.message
     });
   }

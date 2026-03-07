@@ -338,7 +338,7 @@
       "支持图片导出",
       "集成导出 API"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "27",

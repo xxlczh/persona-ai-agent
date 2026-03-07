@@ -5,6 +5,21 @@ import request from './request';
  */
 const personaApi = {
   /**
+   * 导出用户画像
+   * @param {number|string} id - 画像 ID
+   * @param {Object} options - 导出选项
+   * @param {string} options.format - 导出格式 (json/markdown/pdf)
+   * @param {string[]} options.content - 导出内容选项
+   */
+  export(id, options) {
+    return request({
+      url: `/persona/${id}/export`,
+      method: 'post',
+      data: options,
+      responseType: 'blob'
+    });
+  },
+  /**
    * 生成用户画像
    * @param {Object} data - 生成信息
    * @param {number|string} data.projectId - 项目 ID
