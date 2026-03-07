@@ -24,7 +24,7 @@
       "创建 personas 表结构",
       "创建 generation_logs 表结构"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "3",
