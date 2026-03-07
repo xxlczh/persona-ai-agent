@@ -1,0 +1,403 @@
+[
+  {
+    "id": "1",
+    "title": "项目初始化与基础配置",
+    "description": "创建项目基础结构，配置开发环境",
+    "steps": [
+      "创建 backend 和 frontend 目录结构",
+      "初始化 backend package.json",
+      "初始化 frontend package.json",
+      "配置 .env 示例文件",
+      "配置 git 仓库"
+    ],
+    "passes": false
+  },
+  {
+    "id": "2",
+    "title": "数据库设计与初始化",
+    "description": "设计并创建数据库表结构",
+    "steps": [
+      "创建 MySQL 数据库初始化脚本",
+      "创建 users 表结构",
+      "创建 projects 表结构",
+      "创建 source_data 表结构",
+      "创建 personas 表结构",
+      "创建 generation_logs 表结构"
+    ],
+    "passes": false
+  },
+  {
+    "id": "3",
+    "title": "后端基础框架搭建",
+    "description": "搭建 Express 后端基础框架",
+    "steps": [
+      "安装 Express 及相关依赖",
+      "创建 app.js 主入口",
+      "配置 CORS 中间件",
+      "配置 JSON 解析中间件",
+      "创建基础路由结构"
+    ],
+    "passes": false
+  },
+  {
+    "id": "4",
+    "title": "数据库连接配置",
+    "description": "配置 MySQL 和 Redis 连接",
+    "steps": [
+      "安装 mysql2 和 sequelize",
+      "安装 ioredis",
+      "创建数据库配置文件",
+      "创建 Redis 配置文件",
+      "测试数据库连接"
+    ],
+    "passes": false
+  },
+  {
+    "id": "5",
+    "title": "LLM 服务封装",
+    "description": "实现多模型 LLM 调用封装",
+    "steps": [
+      "创建 LLM 服务基类",
+      "实现 OpenAI 适配器",
+      "实现百度文心一言适配器",
+      "实现智谱 GLM 适配器",
+      "实现模型切换逻辑",
+      "编写测试用例"
+    ],
+    "passes": false
+  },
+  {
+    "id": "6",
+    "title": "用户认证模块",
+    "description": "实现用户注册登录功能",
+    "steps": [
+      "创建用户模型",
+      "实现用户注册接口",
+      "实现用户登录接口",
+      "实现 JWT 认证中间件",
+      "实现密码加密",
+      "编写 API 文档"
+    ],
+    "passes": false
+  },
+  {
+    "id": "7",
+    "title": "项目管理层",
+    "description": "实现项目创建和管理功能",
+    "steps": [
+      "创建项目模型",
+      "实现创建项目接口",
+      "实现项目列表接口",
+      "实现项目详情接口",
+      "实现项目删除接口"
+    ],
+    "passes": false
+  },
+  {
+    "id": "8",
+    "title": "数据源管理模块",
+    "description": "实现数据源上传和管理",
+    "steps": [
+      "创建数据源模型",
+      "实现文件上传接口",
+      "实现数据源列表接口",
+      "实现数据源详情接口",
+      "实现数据源删除接口"
+    ],
+    "passes": false
+  },
+  {
+    "id": "9",
+    "title": "用户画像 Prompt 设计",
+    "description": "设计高效的用户画像生成 Prompt",
+    "steps": [
+      "设计人口统计维度 Prompt",
+      "设计行为特征维度 Prompt",
+      "设计心理特征维度 Prompt",
+      "设计需求特征维度 Prompt",
+      "设计场景特征维度 Prompt",
+      "设计综合生成 Prompt",
+      "测试 Prompt 生成效果"
+    ],
+    "passes": false
+  },
+  {
+    "id": "10",
+    "title": "画像生成服务",
+    "description": "实现用户画像核心生成逻辑",
+    "steps": [
+      "创建画像生成服务类",
+      "实现数据获取逻辑",
+      "实现 Prompt 构建",
+      "实现 LLM 调用",
+      "实现 JSON 解析",
+      "实现数据存储"
+    ],
+    "passes": false
+  },
+  {
+    "id": "11",
+    "title": "画像生成 API 接口",
+    "description": "开发画像生成相关 API",
+    "steps": [
+      "实现 POST /api/persona/generate",
+      "实现 GET /api/persona/list",
+      "实现 GET /api/persona/:id",
+      "实现 PUT /api/persona/:id",
+      "实现 DELETE /api/persona/:id"
+    ],
+    "passes": false
+  },
+  {
+    "id": "12",
+    "title": "质量评估模块设计",
+    "description": "设计多维度质量评估体系",
+    "steps": [
+      "设计完整性评估算法",
+      "设计一致性评估算法",
+      "设计真实性评估算法",
+      "设计可操作性评估算法",
+      "设计综合评分算法"
+    ],
+    "passes": false
+  },
+  {
+    "id": "13",
+    "title": "质量评估服务实现",
+    "description": "实现画像质量评估服务",
+    "steps": [
+      "创建评估服务类",
+      "实现完整性评估",
+      "实现一致性评估",
+      "实现真实性评估",
+      "实现可操作性评估",
+      "实现综合评分"
+    ],
+    "passes": false
+  },
+  {
+    "id": "14",
+    "title": "质量评估 API 接口",
+    "description": "开发质量评估相关 API",
+    "steps": [
+      "实现 POST /api/evaluation/persona/:id",
+      "实现 GET /api/evaluation/history/:personaId",
+      "实现 GET /api/evaluation/statistics/:projectId"
+    ],
+    "passes": false
+  },
+  {
+    "id": "15",
+    "title": "前端项目初始化",
+    "description": "初始化 Vue 3 前端项目",
+    "steps": [
+      "使用 Vite 创建 Vue 3 项目",
+      "安装 Element Plus",
+      "安装 Pinia 状态管理",
+      "安装 Vue Router",
+      "配置项目结构"
+    ],
+    "passes": false
+  },
+  {
+    "id": "16",
+    "title": "前端基础页面搭建",
+    "description": "搭建前端基础页面结构",
+    "steps": [
+      "创建登录页面",
+      "创建注册页面",
+      "创建仪表盘页面",
+      "创建项目列表页面",
+      "配置路由"
+    ],
+    "passes": false
+  },
+  {
+    "id": "17",
+    "title": "前端 API 封装",
+    "description": "封装前端 API 调用",
+    "steps": [
+      "创建 Axios 实例",
+      "封装认证 API",
+      "封装项目 API",
+      "封装画像 API",
+      "封装评估 API"
+    ],
+    "passes": false
+  },
+  {
+    "id": "18",
+    "title": "数据源管理页面",
+    "description": "开发数据源上传和管理页面",
+    "steps": [
+      "创建数据源列表组件",
+      "创建文件上传组件",
+      "创建数据源详情组件",
+      "集成 API",
+      "页面测试"
+    ],
+    "passes": false
+  },
+  {
+    "id": "19",
+    "title": "画像生成页面",
+    "description": "开发核心画像生成页面",
+    "steps": [
+      "创建数据选择组件",
+      "创建 Prompt 配置组件",
+      "开发生成进度组件",
+      "创建结果展示组件",
+      "页面集成测试"
+    ],
+    "passes": false
+  },
+  {
+    "id": "20",
+    "title": "画像详情页面",
+    "description": "开发画像详情查看页面",
+    "steps": [
+      "创建画像卡片组件",
+      "创建画像编辑组件",
+      "创建画像导出组件",
+      "页面集成测试"
+    ],
+    "passes": false
+  },
+  {
+    "id": "21",
+    "title": "质量评估页面",
+    "description": "开发质量评估展示页面",
+    "steps": [
+      "创建评估仪表盘组件",
+      "创建评分图表组件",
+      "创建评估详情组件",
+      "集成评估 API",
+      "页面测试"
+    ],
+    "passes": false
+  },
+  {
+    "id": "22",
+    "title": "Redis 缓存集成",
+    "description": "集成 Redis 缓存",
+    "steps": [
+      "安装 ioredis",
+      "配置 Redis 连接",
+      "实现缓存服务类",
+      "在画像接口中集成缓存",
+      "测试缓存效果"
+    ],
+    "passes": false
+  },
+  {
+    "id": "23",
+    "title": "日志记录模块",
+    "description": "实现日志记录功能",
+    "steps": [
+      "安装日志库",
+      "配置日志中间件",
+      "实现请求日志",
+      "实现错误日志",
+      "实现操作日志"
+    ],
+    "passes": false
+  },
+  {
+    "id": "24",
+    "title": "错误处理与响应封装",
+    "description": "统一错误处理和响应格式",
+    "steps": [
+      "创建响应封装工具",
+      "创建错误处理中间件",
+      "统一错误码定义",
+      "全局错误捕获",
+      "测试错误处理"
+    ],
+    "passes": false
+  },
+  {
+    "id": "25",
+    "title": "前端状态管理",
+    "description": "使用 Pinia 管理状态",
+    "steps": [
+      "创建用户状态 store",
+      "创建项目状态 store",
+      "创建画像状态 store",
+      "创建评估状态 store",
+      "持久化状态"
+    ],
+    "passes": false
+  },
+  {
+    "id": "26",
+    "title": "用户画像导出功能",
+    "description": "实现画像导出功能",
+    "steps": [
+      "支持 JSON 导出",
+      "支持 PDF 导出",
+      "支持图片导出",
+      "集成导出 API"
+    ],
+    "passes": false
+  },
+  {
+    "id": "27",
+    "title": "批量生成功能",
+    "description": "实现批量生成画像功能",
+    "steps": [
+      "创建批量生成队列",
+      "实现批量生成接口",
+      "实现进度查询",
+      "实现批量结果展示"
+    ],
+    "passes": false
+  },
+  {
+    "id": "28",
+    "title": "Prompt 模板管理",
+    "description": "实现 Prompt 模板管理",
+    "steps": [
+      "创建 Prompt 模板表",
+      "实现模板 CRUD 接口",
+      "实现模板预览",
+      "实现模板测试"
+    ],
+    "passes": false
+  },
+  {
+    "id": "29",
+    "title": "性能优化",
+    "description": "优化系统性能",
+    "steps": [
+      "数据库查询优化",
+      "LLM 调用优化",
+      "前端加载优化",
+      "缓存策略优化"
+    ],
+    "passes": false
+  },
+  {
+    "id": "30",
+    "title": "部署配置",
+    "description": "准备部署相关配置",
+    "steps": [
+      "创建 Dockerfile",
+      "创建 docker-compose.yml",
+      "配置 Nginx",
+      "创建部署脚本"
+    ],
+    "passes": false
+  },
+  {
+    "id": "31",
+    "title": "项目文档",
+    "description": "编写项目文档",
+    "steps": [
+      "编写 README.md",
+      "编写 API 文档",
+      "编写部署文档",
+      "编写使用手册"
+    ],
+    "passes": false
+  }
+]
