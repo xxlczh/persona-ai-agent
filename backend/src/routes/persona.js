@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Persona, Project } = require('../models');
 const PersonaGenerationService = require('../services/PersonaGenerationService');
+const cacheService = require('../services/CacheService');
 
 /**
  * POST /api/persona/generate
@@ -61,6 +62,20 @@ router.get('/list', async (req, res) => {
   try {
     const { projectId, status, page = 1, pageSize = 20 } = req.query;
 
+    // 生成缓存键
+    const cacheKey = cacheService.generateListCacheKey({ projectId, status, page, pageSize });
+
+    // 尝试从缓存获取
+    const cachedData = await cacheService.getPersonaList(cacheKey);
+    if (cachedData) {
+      return res.json({
+        success: true,
+        message: '获取成功(缓存)',
+        data: cachedData,
+        cached: true
+      });
+    }
+
     const where = {};
     if (projectId) {
       where.project_id = projectId;
@@ -82,15 +97,21 @@ router.get('/list', async (req, res) => {
       ]
     });
 
+    const result = {
+      list: rows,
+      total: count,
+      page: parseInt(page),
+      pageSize: limit
+    };
+
+    // 缓存结果
+    await cacheService.setPersonaList(cacheKey, result);
+
     res.json({
       success: true,
       message: '获取成功',
-      data: {
-        list: rows,
-        total: count,
-        page: parseInt(page),
-        pageSize: limit
-      }
+      data: result,
+      cached: false
     });
   } catch (error) {
     console.error('获取画像列表失败:', error);
@@ -110,6 +131,17 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
+    // 尝试从缓存获取
+    const cachedPersona = await cacheService.getPersona(id);
+    if (cachedPersona) {
+      return res.json({
+        success: true,
+        message: '获取成功(缓存)',
+        data: cachedPersona,
+        cached: true
+      });
+    }
+
     const persona = await Persona.findByPk(id, {
       include: [
         { model: Project, as: 'project', attributes: ['id', 'name', 'description'] }
@@ -123,10 +155,14 @@ router.get('/:id', async (req, res) => {
       });
     }
 
+    // 缓存结果
+    await cacheService.setPersona(id, persona);
+
     res.json({
       success: true,
       message: '获取成功',
-      data: persona
+      data: persona,
+      cached: false
     });
   } catch (error) {
     console.error('获取画像详情失败:', error);
@@ -179,6 +215,10 @@ router.put('/:id', async (req, res) => {
 
     await persona.update(filteredData);
 
+    // 清除缓存
+    await cacheService.delPersona(id);
+    await cacheService.clearPersonaCache();
+
     res.json({
       success: true,
       message: '更新成功',
@@ -212,6 +252,10 @@ router.delete('/:id', async (req, res) => {
     }
 
     await persona.destroy();
+
+    // 清除缓存
+    await cacheService.delPersona(id);
+    await cacheService.clearPersonaCache();
 
     res.json({
       success: true,
