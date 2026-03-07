@@ -25,7 +25,10 @@
           </el-tab-pane>
           <el-tab-pane label="质量评估" name="evaluation">
             <div class="tab-content">
-              <p>质量评估</p>
+              <EvaluationDashboard
+                v-if="projectId"
+                :project-id="projectId"
+              />
             </div>
           </el-tab-pane>
         </el-tabs>
@@ -39,6 +42,7 @@ import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import DataSourceManager from '@/components/DataSourceManager.vue'
 import PersonaGenerator from '@/components/PersonaGenerator.vue'
+import EvaluationDashboard from '@/components/EvaluationDashboard.vue'
 
 const router = useRouter()
 const route = useRoute()

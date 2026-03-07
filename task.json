@@ -274,7 +274,7 @@
       "集成评估 API",
       "页面测试"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "22",

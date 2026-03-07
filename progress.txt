@@ -261,3 +261,9 @@
 状态: completed
 任务ID: 20
 ========================================
+
+## 2026-03-07 19:55 - 任务 21: 质量评估页面
+- 状态: 完成
+- 提交: (待提交)
+- 备注: 安装 echarts 图表库，创建评估仪表盘组件 (EvaluationDashboard.vue)，创建评分图表组件 (ScoreChart.vue)，创建评估详情组件 (EvaluationDetail.vue)，集成到 ProjectDetail 页面的质量评估 tab。代码通过 lint 检查和 build 构建。
+========================================
