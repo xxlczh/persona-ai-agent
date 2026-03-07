@@ -284,6 +284,27 @@ auto_commit() {
     return 0
 }
 
+# 自动推送到远程仓库
+auto_push() {
+    cd "$PROJECT_DIR"
+
+    # 检查是否有远程仓库配置
+    if ! git remote get-url origin &>/dev/null; then
+        log "INFO" "没有配置远程仓库，跳过推送"
+        return 0
+    fi
+
+    log "RUN" "推送到远程仓库..."
+
+    # 推送到远程
+    if git push origin master 2>&1; then
+        log "DONE" "推送成功"
+    else
+        log "WARN" "推送失败，可能是网络问题，稍后会重试"
+        return 1
+    fi
+}
+
 # 记录进度
 record_progress() {
     local iteration="$1"
@@ -365,6 +386,9 @@ $task_details
 
     # 尝试自动提交
     auto_commit
+
+    # 尝试推送到远程仓库
+    auto_push
 
     # 获取 commit hash
     local commit_hash=$(cd "$PROJECT_DIR" && git rev-parse --short HEAD 2>/dev/null || echo "")
