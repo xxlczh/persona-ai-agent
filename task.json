@@ -119,7 +119,7 @@
       "设计综合生成 Prompt",
       "测试 Prompt 生成效果"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "10",
