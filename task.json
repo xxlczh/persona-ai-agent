@@ -197,7 +197,7 @@
       "安装 Vue Router",
       "配置项目结构"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "16",
