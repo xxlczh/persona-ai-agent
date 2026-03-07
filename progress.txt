@@ -149,3 +149,8 @@
 状态: completed
 任务ID: 9
 ========================================
+## 2026-03-07 18:55 - 任务 10: 画像生成服务
+- 状态: 完成
+- 提交: (待提交)
+- 备注: 创建 Persona 模型 (models/Persona.js)，创建画像生成服务类 (services/PersonaGenerationService.js)，实现数据获取逻辑 (支持 CSV/JSON/TXT 文件)，实现 Prompt 构建 (复用 PersonaPrompts)，实现 LLM 调用 (支持多模型切换)，实现 JSON 解析，实现数据存储，更新 models/index.js 添加关联
+========================================
