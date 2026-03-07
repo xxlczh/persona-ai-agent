@@ -347,4 +347,17 @@
 迭代 #1 - 2026-03-07 20:34:23
 状态: completed
 任务ID: 27
+
+## [2026-03-07 20:40] 任务 28: Prompt 模板管理
+
+- 状态: 完成
+- 提交: 待提交
+- 备注:
+  - 创建 PromptTemplate 数据模型
+  - 实现模板 CRUD API 接口
+  - 实现模板预览 API POST /api/prompt-templates/:id/preview
+  - 实现模板测试 API POST /api/prompt-templates/:id/test
+  - 创建数据库迁移脚本 database/migrations/007_create_prompt_templates_table.sql
+  - 代码通过 lint 检查
+========================================
 ========================================

@@ -26,6 +26,7 @@ app.use('/api/datasources', require('./routes/datasources'));
 app.use('/api/persona', require('./routes/persona'));
 app.use('/api/evaluation', require('./routes/evaluation'));
 app.use('/api/health', require('./routes/health'));
+app.use('/api/prompt-templates', require('./routes/promptTemplates'));
 
 // Error logging middleware
 app.use(errorLogger);

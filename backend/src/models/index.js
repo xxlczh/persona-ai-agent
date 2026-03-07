@@ -4,6 +4,7 @@ const Project = require('./Project');
 const DataSource = require('./DataSource');
 const Persona = require('./Persona');
 const Evaluation = require('./Evaluation');
+const PromptTemplate = require('./PromptTemplate');
 
 // 建立关联关系
 User.hasMany(Project, { foreignKey: 'owner_id', as: 'projects' });
@@ -25,11 +26,20 @@ Evaluation.belongsTo(Persona, { foreignKey: 'persona_id', as: 'persona' });
 Project.hasMany(Evaluation, { foreignKey: 'project_id', as: 'evaluations' });
 Evaluation.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
 
+// Project 与 PromptTemplate 关联
+Project.hasMany(PromptTemplate, { foreignKey: 'project_id', as: 'promptTemplates' });
+PromptTemplate.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
+
+// User 与 PromptTemplate 关联
+User.hasMany(PromptTemplate, { foreignKey: 'created_by', as: 'createdTemplates' });
+PromptTemplate.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
+
 module.exports = {
   sequelize,
   User,
   Project,
   DataSource,
   Persona,
-  Evaluation
+  Evaluation,
+  PromptTemplate
 };

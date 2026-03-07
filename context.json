@@ -2,9 +2,9 @@
   "version": "1.0",
   "project": "用户画像语义模型开发",
   "created_at": "2026-03-07T00:00:00Z",
-  "last_updated": "2026-03-07T12:24:56.422Z",
+  "last_updated": "2026-03-07T12:34:43.341Z",
   "session": {
-    "current_task_id": "27",
+    "current_task_id": "28",
     "total_tasks": 31,
     "completed_tasks": [
       "1",
@@ -32,10 +32,11 @@
       "23",
       "24",
       "25",
-      "26"
+      "26",
+      "27"
     ],
     "failed_tasks": [],
-    "iteration": 44
+    "iteration": 45
   },
   "project_state": {
     "initialized": true,
@@ -45,23 +46,23 @@
     "llm_configured": true
   },
   "latest_commits": [
+    "25a5683",
     "f5e0c94",
     "f9c3d6e",
     "447a3c7",
-    "3e183f9",
-    "fd1ab14"
+    "3e183f9"
   ],
   "current_task": {
-    "id": "27",
-    "title": "批量生成功能",
-    "description": "实现批量生成画像功能",
+    "id": "28",
+    "title": "Prompt 模板管理",
+    "description": "实现 Prompt 模板管理",
     "steps": [
-      "创建批量生成队列",
-      "实现批量生成接口",
-      "实现进度查询",
-      "实现批量结果展示"
+      "创建 Prompt 模板表",
+      "实现模板 CRUD 接口",
+      "实现模板预览",
+      "实现模板测试"
     ],
-    "started_at": "2026-03-07T12:24:56.423Z"
+    "started_at": "2026-03-07T12:34:43.342Z"
   },
   "notes": "每次任务完成后更新此文件，用于保持轻量级上下文"
 }
