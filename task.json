@@ -10,7 +10,7 @@
       "配置 .env 示例文件",
       "配置 git 仓库"
     ],
-    "passes": false
+    "passes": true
   },
   {
     "id": "2",
