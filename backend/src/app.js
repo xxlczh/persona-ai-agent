@@ -5,6 +5,7 @@ require('dotenv').config();
 const { logger } = require('./utils/logger');
 const requestLogger = require('./middleware/requestLogger');
 const errorLogger = require('./middleware/errorLogger');
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,28 +30,26 @@ app.use('/api/health', require('./routes/health'));
 // Error logging middleware
 app.use(errorLogger);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  logger.error(err.message, { stack: err.stack });
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
+// Global error handler middleware
+app.use(errorHandler);
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
-});
+// 404 handler - must be after all routes
+app.use(notFoundHandler);
 
 // Start server
 app.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
   logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Global exception handlers
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught Exception:', { message: err.message, stack: err.stack });
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection:', { reason: String(reason), promise: String(promise) });
 });
 
 module.exports = app;

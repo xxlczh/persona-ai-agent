@@ -295,3 +295,8 @@
 状态: completed
 任务ID: 23
 ========================================
+
+## 2026-03-07 20:10 - 任务 24: 错误处理与响应封装
+- 状态: 完成
+- 提交: (待提交)
+- 备注: 创建响应封装工具 (utils/apiResponse.js) 提供 success/successWithPagination 方法，创建统一错误码定义 (utils/errorCodes.js) 包含 10+ 类别的错误码，创建自定义错误类 (utils/AppError.js) 支持多种错误类型，创建错误处理中间件 (middleware/errorHandler.js) 提供全局错误处理和 asyncHandler 包装器，在 app.js 中集成全局错误处理中间件和 404 处理，添加 uncaughtException 和 unhandledRejection 全局异常捕获。编写测试用例验证所有功能，测试通过。
