@@ -13,6 +13,11 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
+# 解决嵌套 Claude Code 会话问题
+# 在子 shell 中运行，避免环境变量冲突
+unset CLAUDECODE 2>/dev/null
+export CLAUDE_CODE_DISABLE=true 2>/dev/null
+
 # 默认参数
 MAX_ITERATIONS=1
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -375,9 +380,11 @@ $task_details
 开始工作吧！"
 
     # 调用 Claude Code
+    # 解决嵌套会话问题：取消设置可能导致冲突的环境变量
+    unset CLAUDECODE 2>/dev/null
     # 使用 --dangerously-skip-permissions 跳过权限确认
     # 使用 -p 从 stdin 读取 prompt
-    echo "$INITIAL_PROMPT" | claude $PERMISSION_MODE -p 2>&1 | tee -a "$LOG_FILE"
+    echo "$INITIAL_PROMPT" | env -u CLAUDECODE claude $PERMISSION_MODE -p 2>&1 | tee -a "$LOG_FILE"
 
     local exit_code=${PIPESTATUS[0]}
 
