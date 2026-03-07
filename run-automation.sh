@@ -356,9 +356,9 @@ run_claude() {
 用户画像语义模型开发
 
 ## 当前状态 (来自 context.json)
-- 已完成任务: $(cd "$PROJECT_DIR" && node -e "const d=require('./context.json');console.log(d.session.completed_tasks.join(',')||'')")"
-- 项目状态: $(cd "$PROJECT_DIR" && node -e "const d=require('./context.json');console.log('后端:'+d.project_state.backend_ready+',前端:'+d.project_state.frontend_ready+',数据库:'+d.project_state.database_ready+',LLM:'+d.project_state.llm_configured)")"
-- 迭代次数: $(cd "$PROJECT_DIR" && node -e "const d=require('./context.json');console.log(d.session.iteration)")"
+- 已完成任务: $(cd "$PROJECT_DIR" && node -e "const d=require('./context.json');console.log(d.session.completed_tasks.join(',')||'')")
+- 项目状态: $(cd "$PROJECT_DIR" && node -e "const d=require('./context.json');console.log('后端:'+d.project_state.backend_ready+',前端:'+d.project_state.frontend_ready+',数据库:'+d.project_state.database_ready+',LLM:'+d.project_state.llm_configured)")
+- 迭代次数: $(cd "$PROJECT_DIR" && node -e "const d=require('./context.json');console.log(d.session.iteration)")
 
 ## 本次任务详情
 $task_details
