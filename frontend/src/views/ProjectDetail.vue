@@ -37,6 +37,38 @@
               />
             </div>
           </el-tab-pane>
+          <el-tab-pane label="扩展工具" name="extensions">
+            <div class="tab-content">
+              <el-tabs v-model="extensionTab" tab-position="left">
+                <el-tab-pane label="用研问卷" name="survey">
+                  <SurveyGenerator
+                    v-if="projectId"
+                    :project-id="projectId"
+                    :personas="personas"
+                  />
+                </el-tab-pane>
+                <el-tab-pane label="营销脚本" name="marketing">
+                  <MarketingScriptGenerator
+                    v-if="projectId"
+                    :project-id="projectId"
+                    :personas="personas"
+                  />
+                </el-tab-pane>
+                <el-tab-pane label="产品建议" name="suggestion">
+                  <ProductSuggestionGenerator
+                    v-if="projectId"
+                    :project-id="projectId"
+                    :personas="personas"
+                  />
+                </el-tab-pane>
+              </el-tabs>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="团队协作" name="team">
+            <div class="tab-content">
+              <TeamCollaboration :project-id="projectId" />
+            </div>
+          </el-tab-pane>
         </el-tabs>
       </el-main>
     </el-container>
@@ -44,20 +76,42 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import DataSourceManager from '@/components/DataSourceManager.vue'
 import PersonaGenerator from '@/components/PersonaGenerator.vue'
 import BatchGenerator from '@/components/BatchGenerator.vue'
 import EvaluationDashboard from '@/components/EvaluationDashboard.vue'
+import SurveyGenerator from '@/components/SurveyGenerator.vue'
+import MarketingScriptGenerator from '@/components/MarketingScriptGenerator.vue'
+import ProductSuggestionGenerator from '@/components/ProductSuggestionGenerator.vue'
+import TeamCollaboration from '@/components/TeamCollaboration.vue'
 
 const router = useRouter()
 const route = useRoute()
 
 const activeTab = ref('sources')
+const extensionTab = ref('survey')
+const personas = ref([])
 
 const projectId = computed(() => {
   return parseInt(route.params.id) || null
+})
+
+// 获取项目画像列表
+const fetchPersonas = async () => {
+  if (!projectId.value) return
+  try {
+    const res = await fetch(`/api/persona/list?projectId=${projectId.value}&limit=100`)
+    const data = await res.json()
+    personas.value = data.data?.rows || []
+  } catch (error) {
+    console.error('获取画像列表失败:', error)
+  }
+}
+
+onMounted(() => {
+  fetchPersonas()
 })
 
 const goBack = () => {

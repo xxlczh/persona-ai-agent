@@ -60,24 +60,8 @@
       </el-main>
     </el-container>
 
-    <!-- 新建项目对话框 -->
-    <el-dialog v-model="dialogVisible" title="新建项目" width="500px">
-      <el-form :model="projectForm" :rules="rules" ref="formRef" label-width="80px">
-        <el-form-item label="项目名称" prop="name">
-          <el-input v-model="projectForm.name" placeholder="请输入项目名称" />
-        </el-form-item>
-        <el-form-item label="项目描述" prop="description">
-          <el-input v-model="projectForm.description" type="textarea" :rows="3" placeholder="请输入项目描述" />
-        </el-form-item>
-        <el-form-item label="行业" prop="industry">
-          <el-input v-model="projectForm.industry" placeholder="请输入所属行业" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitProject" :loading="submitting">创建</el-button>
-      </template>
-    </el-dialog>
+    <!-- 新建项目对话框 - 3种模式选择 -->
+    <ProjectModeDialog v-model:visible="dialogVisible" @created="handleProjectCreated" />
   </div>
 </template>
 
@@ -87,6 +71,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ArrowDown, User, SwitchButton } from '@element-plus/icons-vue'
 import request from '@/api/request'
+import ProjectModeDialog from '@/components/ProjectModeDialog.vue'
 
 const router = useRouter()
 
@@ -178,6 +163,11 @@ const submitProject = async () => {
 
 const goToProject = (id) => {
   router.push(`/project/${id}`)
+}
+
+// 处理项目创建成功
+const handleProjectCreated = (project) => {
+  fetchProjects()
 }
 
 const formatDate = (date) => {

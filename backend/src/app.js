@@ -28,6 +28,12 @@ app.use('/api/evaluation', require('./routes/evaluation'));
 app.use('/api/health', require('./routes/health'));
 app.use('/api/prompt-templates', require('./routes/promptTemplates'));
 
+// 扩展功能路由
+app.use('/api/surveys', require('./routes/surveys'));
+app.use('/api/marketing-scripts', require('./routes/marketingScripts'));
+app.use('/api/product-suggestions', require('./routes/productSuggestions'));
+app.use('/api/teams', require('./routes/teams'));
+
 // Error logging middleware
 app.use(errorLogger);
 
