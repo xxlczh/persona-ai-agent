@@ -279,6 +279,66 @@ ${JSON.stringify(scenario, null, 2)}
   }
 
   /**
+   * 自然语言画像生成 Prompt（极简模式）
+   * 用于直接从自然语言描述生成用户画像
+   */
+  static getNaturalLanguagePrompt(naturalLanguageInput, config = {}) {
+    return {
+      role: 'user',
+      content: `你是一个专业的用户画像分析师。用户用自然语言描述了他们想要的用户画像，请根据描述生成相应的用户画像。
+
+## 用户需求描述
+${naturalLanguageInput}
+
+${config.useIndustryData ? '## 行业背景\n请结合相关行业通用数据增强画像的准确性和完整性。' : ''}
+
+## 输出要求
+请生成一个完整、专业的用户画像，包含以下维度：
+
+{
+  "persona_name": "string", // 画像名称，如"年轻游戏爱好者"
+  "summary": "string", // 3-4句话的用户特征描述，包含核心特点和行为模式
+  "demographic": {
+    "age_group": "string", // 如"20-30岁"
+    "gender": "string", // 如"男性为主"
+    "occupation": "string", // 如"年轻职场人士"
+    "income_level": "string", // 如"中等收入"
+    "education": "string", // 如"本科及以上"
+    "location": "string" // 如"一二线城市"
+  },
+  "behavioral": {
+    "shopping_habit": "string", // 购物习惯描述
+    "online_preference": "string", // 线上行为偏好
+    "brand_loyalty": "string", // 品牌忠诚度
+    "price_sensitivity": "string", // 价格敏感度
+    "decision_factor": "string" // 主要决策因素
+  },
+  "psychological": {
+    "values": "string", // 核心价值观
+    "motivation": "string", // 购买动机
+    "pain_points": "string", // 痛点
+    "aspirations": "string" // 追求/愿望
+  },
+  "needs": {
+    "main_need": "string", // 主要需求
+    "sub_needs": ["string"], // 次要需求
+    "unmet_needs": "string" // 未被满足的需求
+  },
+  "scenario": {
+    "usage_scene": "string", // 典型使用场景
+    "interaction_channel": "string", // 偏好互动渠道
+    "content_preference": "string" // 内容偏好
+  },
+  "tags": ["string"], // 8-10个标签，用于快速识别
+  "communication_style": "string", // 沟通风格建议
+  "marketing_suggestions": ["string"] // 2-3条营销建议
+}
+
+请确保画像逻辑清晰、自洽，标签准确有区分度。`
+    };
+  }
+
+  /**
    * 快速画像生成 Prompt
    * 用于直接从原始数据生成简化版用户画像
    */

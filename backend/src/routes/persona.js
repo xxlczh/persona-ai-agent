@@ -244,6 +244,60 @@ router.post('/generate', async (req, res) => {
 });
 
 /**
+ * POST /api/persona/generate-from-natural-language
+ * 通过自然语言生成用户画像（极简模式）
+ */
+router.post('/generate-from-natural-language', async (req, res) => {
+  try {
+    const { projectId, naturalLanguageInput, useIndustryData, count = 1 } = req.body;
+
+    if (!projectId) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少 projectId 参数'
+      });
+    }
+
+    if (!naturalLanguageInput || !naturalLanguageInput.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: '缺少 naturalLanguageInput 参数'
+      });
+    }
+
+    // 验证项目是否存在
+    const project = await Project.findByPk(projectId);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: '项目不存在'
+      });
+    }
+
+    // 生成画像
+    const personaService = new PersonaGenerationService();
+    const persona = await personaService.generateFromNaturalLanguage(
+      projectId,
+      naturalLanguageInput,
+      { useIndustryData }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: '画像生成成功',
+      data: persona
+    });
+  } catch (error) {
+    console.error('生成画像失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '生成画像失败',
+      error: error.message
+    });
+  }
+});
+
+/**
  * GET /api/persona/list
  * 获取画像列表
  */

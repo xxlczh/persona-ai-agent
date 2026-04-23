@@ -5,30 +5,47 @@
         <div class="header-content">
           <el-button @click="goBack">返回</el-button>
           <h2>项目详情</h2>
+          <el-tag v-if="projectMode" :type="getModeTagType(projectMode)">
+            {{ getModeText(projectMode) }}
+          </el-tag>
         </div>
       </el-header>
       <el-main>
         <el-tabs v-model="activeTab">
-          <el-tab-pane label="数据源" name="sources">
+          <!-- 精准定制模式：需要上传数据源 -->
+          <el-tab-pane v-if="projectMode !== 'simple'" label="数据源" name="sources">
             <div class="tab-content">
               <DataSourceManager v-if="projectId" :project-id="projectId" />
             </div>
           </el-tab-pane>
+
+          <!-- 极简模式：使用自然语言生成 -->
           <el-tab-pane label="画像生成" name="generation">
             <div class="tab-content">
-              <PersonaGenerator
-                v-if="projectId"
+              <!-- 极简模式使用 SimpleModeGenerator -->
+              <SimpleModeGenerator
+                v-if="projectId && projectMode === 'simple'"
                 :project-id="projectId"
+                :initial-input="naturalLanguageInput"
                 @generated="handlePersonaGenerated"
               />
-              <BatchGenerator
-                v-if="projectId"
-                :project-id="projectId"
-                @generated="handleBatchGenerated"
-                @view="handleViewPersona"
-              />
+              <!-- 精准/混合模式使用原有生成器 -->
+              <template v-else>
+                <PersonaGenerator
+                  v-if="projectId"
+                  :project-id="projectId"
+                  @generated="handlePersonaGenerated"
+                />
+                <BatchGenerator
+                  v-if="projectId"
+                  :project-id="projectId"
+                  @generated="handleBatchGenerated"
+                  @view="handleViewPersona"
+                />
+              </template>
             </div>
           </el-tab-pane>
+
           <el-tab-pane label="质量评估" name="evaluation">
             <div class="tab-content">
               <EvaluationDashboard
@@ -80,12 +97,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import DataSourceManager from '@/components/DataSourceManager.vue'
 import PersonaGenerator from '@/components/PersonaGenerator.vue'
+import SimpleModeGenerator from '@/components/SimpleModeGenerator.vue'
 import BatchGenerator from '@/components/BatchGenerator.vue'
 import EvaluationDashboard from '@/components/EvaluationDashboard.vue'
 import SurveyGenerator from '@/components/SurveyGenerator.vue'
 import MarketingScriptGenerator from '@/components/MarketingScriptGenerator.vue'
 import ProductSuggestionGenerator from '@/components/ProductSuggestionGenerator.vue'
 import TeamCollaboration from '@/components/TeamCollaboration.vue'
+import request from '@/api/request'
 
 const router = useRouter()
 const route = useRoute()
@@ -93,10 +112,30 @@ const route = useRoute()
 const activeTab = ref('sources')
 const extensionTab = ref('survey')
 const personas = ref([])
+const projectMode = ref('')
+const naturalLanguageInput = ref('')
 
 const projectId = computed(() => {
   return parseInt(route.params.id) || null
 })
+
+// 获取项目详情
+const fetchProjectDetail = async () => {
+  if (!projectId.value) return
+  try {
+    const res = await request.get(`/api/projects/${projectId.value}`)
+    if (res.data) {
+      projectMode.value = res.data.settings?.mode || 'precise'
+      naturalLanguageInput.value = res.data.settings?.naturalLanguageInput || ''
+      // 极简模式默认跳到画像生成
+      if (projectMode.value === 'simple') {
+        activeTab.value = 'generation'
+      }
+    }
+  } catch (error) {
+    console.error('获取项目详情失败:', error)
+  }
+}
 
 // 获取项目画像列表
 const fetchPersonas = async () => {
@@ -111,6 +150,7 @@ const fetchPersonas = async () => {
 }
 
 onMounted(() => {
+  fetchProjectDetail()
   fetchPersonas()
 })
 
@@ -120,7 +160,6 @@ const goBack = () => {
 
 const handlePersonaGenerated = (persona) => {
   console.log('画像生成成功:', persona)
-  // 可以跳转到画像列表或质量评估
 }
 
 const handleBatchGenerated = (personas) => {
@@ -129,6 +168,24 @@ const handleBatchGenerated = (personas) => {
 
 const handleViewPersona = (persona) => {
   router.push(`/persona/${persona.id}`)
+}
+
+const getModeTagType = (mode) => {
+  const map = {
+    'precise': 'primary',
+    'simple': 'success',
+    'hybrid': 'warning'
+  }
+  return map[mode] || 'info'
+}
+
+const getModeText = (mode) => {
+  const map = {
+    'precise': '精准定制模式',
+    'simple': '极简无数据模式',
+    'hybrid': '混合迭代模式'
+  }
+  return map[mode] || '未知模式'
 }
 </script>
 

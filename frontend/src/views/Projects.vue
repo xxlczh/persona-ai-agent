@@ -45,9 +45,14 @@
               <template #header>
                 <div class="card-header">
                   <span>{{ project.name }}</span>
-                  <el-tag size="small" :type="getStatusType(project.status)">
-                    {{ getStatusText(project.status) }}
-                  </el-tag>
+                  <div class="card-tags">
+                    <el-tag size="small" :type="getModeTagType(project.settings?.mode)">
+                      {{ getModeText(project.settings?.mode) }}
+                    </el-tag>
+                    <el-tag size="small" :type="getStatusType(project.status)">
+                      {{ getStatusText(project.status) }}
+                    </el-tag>
+                  </div>
                 </div>
               </template>
               <p>{{ project.description || '暂无描述' }}</p>
@@ -191,6 +196,24 @@ const getStatusText = (status) => {
     'archived': '已归档'
   }
   return map[status] || status
+}
+
+const getModeTagType = (mode) => {
+  const map = {
+    'precise': 'primary',
+    'simple': 'success',
+    'hybrid': 'warning'
+  }
+  return map[mode] || 'info'
+}
+
+const getModeText = (mode) => {
+  const map = {
+    'precise': '精准定制',
+    'simple': '极简模式',
+    'hybrid': '混合迭代'
+  }
+  return map[mode] || '未知模式'
 }
 
 onMounted(() => {

@@ -439,6 +439,75 @@ class PersonaGenerationService {
     await persona.destroy();
     return { success: true };
   }
+
+  /**
+   * 通过自然语言生成用户画像（极简模式）
+   * @param {number} projectId - 项目ID
+   * @param {string} naturalLanguageInput - 自然语言描述
+   * @param {Object} config - 生成配置
+   * @returns {Promise<Object>} - 生成的画像
+   */
+  async generateFromNaturalLanguage(projectId, naturalLanguageInput, config = {}) {
+    const startTime = Date.now();
+
+    // 创建画像记录
+    const persona = await Persona.create({
+      project_id: projectId,
+      name: '生成中...',
+      status: 'generating',
+      generation_config: config
+    });
+
+    try {
+      await this.initLLM(config.modelType || 'openai');
+
+      // 构建自然语言生成 Prompt
+      const prompt = PersonaPrompts.getNaturalLanguagePrompt(naturalLanguageInput, config);
+
+      // 调用 LLM
+      const response = await this.llmProvider.chat([prompt], {
+        temperature: config.temperature || 0.7,
+        max_tokens: config.max_tokens || 2000
+      });
+
+      // 解析 JSON
+      const result = this.parseJSONResponse(response);
+
+      // 更新画像数据
+      await persona.update({
+        name: result.persona_name || '自然语言画像',
+        summary: result.summary,
+        demographic: result.demographic || {},
+        behavioral: result.behavioral || {},
+        psychological: result.psychological || {},
+        needs: result.needs || {},
+        scenario: result.scenario || {},
+        personality_tags: result.tags || [],
+        communication_style: result.communication_style || '',
+        marketing_suggestions: result.marketing_suggestions || [],
+        quality_score: result.quality_score || {
+          completeness: 0.7,
+          consistency: 0.7,
+          overall: 0.7
+        },
+        status: 'completed',
+        generated_by: config.modelType || 'auto'
+      });
+
+      const duration = Date.now() - startTime;
+      console.log(`自然语言画像生成完成，耗时: ${duration}ms`);
+
+      return persona;
+
+    } catch (error) {
+      // 更新失败状态
+      await persona.update({
+        status: 'failed',
+        error_message: error.message
+      });
+      throw error;
+    }
+  }
 }
 
 module.exports = PersonaGenerationService;

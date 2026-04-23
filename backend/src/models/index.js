@@ -51,10 +51,6 @@ TeamMember.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
 User.hasMany(TeamMember, { foreignKey: 'user_id', as: 'teamMemberships' });
 TeamMember.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
 
-// Project 与 Team 关联（可选）
-Team.hasMany(Project, { foreignKey: 'team_id', as: 'projects' });
-Project.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
-
 // ========== 扩展功能模块 ==========
 // Survey 关联
 Project.hasMany(Survey, { foreignKey: 'project_id', as: 'surveys' });

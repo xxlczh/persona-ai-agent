@@ -153,6 +153,22 @@ const personaApi = {
       url: `/api/persona/batch/${batchId}`,
       method: 'delete'
     });
+  },
+
+  /**
+   * 通过自然语言生成画像（极简模式）
+   * @param {Object} data - 生成信息
+   * @param {number|string} data.projectId - 项目 ID
+   * @param {string} data.naturalLanguageInput - 自然语言描述
+   * @param {boolean} [data.useIndustryData] - 是否使用行业数据增强
+   * @param {number} [data.count] - 生成数量
+   */
+  generateFromNaturalLanguage(data) {
+    return request({
+      url: '/api/persona/generate-from-natural-language',
+      method: 'post',
+      data
+    });
   }
 };
 
