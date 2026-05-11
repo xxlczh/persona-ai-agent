@@ -5,10 +5,16 @@
       <div class="persona-title">
         <h2>{{ persona.name }}</h2>
         <el-tag type="success" size="large">生成成功</el-tag>
+        <el-tag v-if="persona.quality_score" :type="getQualityTagType(persona.quality_score.overall_score || persona.quality_score.overall)" size="large">
+          质量评分: {{ persona.quality_score.overall_score || persona.quality_score.overall || 'N/A' }}
+        </el-tag>
       </div>
       <div class="persona-meta">
         <span>创建时间：{{ formatDate(persona.created_at) }}</span>
         <span v-if="persona.project">所属项目：{{ persona.project.name }}</span>
+        <span v-if="persona.quality_score && persona.quality_score.last_evaluated_at">
+          评估时间：{{ formatDate(persona.quality_score.last_evaluated_at) }}
+        </span>
       </div>
     </div>
 
@@ -63,28 +69,23 @@
       <!-- 行为特征 -->
       <el-tab-pane label="行为特征" name="behavioral" v-if="persona.behavioral">
         <div class="dimension-content">
-          <el-descriptions :column="1" border>
-            <el-descriptions-item label="使用频率" v-if="persona.behavioral.usage_frequency">
-              {{ persona.behavioral.usage_frequency }}
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="消费习惯" v-if="persona.behavioral.shopping_habit">
+              {{ persona.behavioral.shopping_habit }}
             </el-descriptions-item>
-            <el-descriptions-item label="使用时段" v-if="persona.behavioral.usage_time">
-              {{ persona.behavioral.usage_time }}
+            <el-descriptions-item label="线上偏好" v-if="persona.behavioral.online_preference">
+              {{ persona.behavioral.online_preference }}
             </el-descriptions-item>
-            <el-descriptions-item label="使用场景" v-if="persona.behavioral.usage_scenario">
-              {{ persona.behavioral.usage_scenario }}
+            <el-descriptions-item label="品牌忠诚度" v-if="persona.behavioral.brand_loyalty">
+              {{ persona.behavioral.brand_loyalty }}
             </el-descriptions-item>
-            <el-descriptions-item label="核心行为" v-if="persona.behavioral.core_behavior">
-              {{ persona.behavioral.core_behavior }}
+            <el-descriptions-item label="价格敏感度" v-if="persona.behavioral.price_sensitivity">
+              {{ persona.behavioral.price_sensitivity }}
             </el-descriptions-item>
-            <el-descriptions-item label="消费习惯" v-if="persona.behavioral.consumption_habit">
-              {{ persona.behavioral.consumption_habit }}
+            <el-descriptions-item label="决策因素" v-if="persona.behavioral.decision_factor" :span="2">
+              {{ persona.behavioral.decision_factor }}
             </el-descriptions-item>
           </el-descriptions>
-
-          <div v-if="persona.behavioral.description" class="dimension-desc">
-            <h4>详细描述</h4>
-            <p>{{ persona.behavioral.description }}</p>
-          </div>
         </div>
       </el-tab-pane>
 
@@ -95,39 +96,39 @@
             <el-descriptions-item label="价值观" v-if="persona.psychological.values">
               {{ persona.psychological.values }}
             </el-descriptions-item>
-            <el-descriptions-item label="态度" v-if="persona.psychological.attitude">
-              {{ persona.psychological.attitude }}
-            </el-descriptions-item>
             <el-descriptions-item label="动机" v-if="persona.psychological.motivation">
               {{ persona.psychological.motivation }}
             </el-descriptions-item>
             <el-descriptions-item label="痛点" v-if="persona.psychological.pain_points">
               {{ persona.psychological.pain_points }}
             </el-descriptions-item>
-            <el-descriptions-item label="兴趣" v-if="persona.psychological.interests">
-              {{ persona.psychological.interests }}
+            <el-descriptions-item label="追求/愿望" v-if="persona.psychological.aspirations">
+              {{ persona.psychological.aspirations }}
             </el-descriptions-item>
           </el-descriptions>
-
-          <div v-if="persona.psychological.description" class="dimension-desc">
-            <h4>详细描述</h4>
-            <p>{{ persona.psychological.description }}</p>
-          </div>
         </div>
       </el-tab-pane>
 
       <!-- 需求分析 -->
-      <el-tab-pane label="需求分析" name="needs" v-if="persona.needs && persona.needs.length">
+      <el-tab-pane label="需求分析" name="needs" v-if="persona.needs">
         <div class="dimension-content">
-          <el-card shadow="hover">
+          <el-card v-if="persona.needs.main_need" shadow="hover">
             <template #header>
               <div class="card-header">
-                <span>用户需求</span>
+                <span>核心需求</span>
+              </div>
+            </template>
+            <div class="needs-text">{{ persona.needs.main_need }}</div>
+          </el-card>
+          <el-card v-if="persona.needs.sub_needs && persona.needs.sub_needs.length" shadow="hover">
+            <template #header>
+              <div class="card-header">
+                <span>子需求</span>
               </div>
             </template>
             <div class="needs-list">
               <el-tag
-                v-for="(need, index) in persona.needs"
+                v-for="(need, index) in persona.needs.sub_needs"
                 :key="index"
                 type="primary"
                 effect="plain"
@@ -137,28 +138,70 @@
               </el-tag>
             </div>
           </el-card>
+          <el-card v-if="persona.needs.unmet_needs" shadow="hover">
+            <template #header>
+              <div class="card-header">
+                <span>未满足需求</span>
+              </div>
+            </template>
+            <div class="needs-text">{{ persona.needs.unmet_needs }}</div>
+          </el-card>
         </div>
       </el-tab-pane>
 
-      <!-- 使用场景 -->
-      <el-tab-pane label="使用场景" name="scenario" v-if="persona.scenario && persona.scenario.length">
+      <!-- 场景特征 -->
+      <el-tab-pane label="使用场景" name="scenario" v-if="persona.scenario">
+        <div class="dimension-content">
+          <el-descriptions :column="1" border>
+            <el-descriptions-item label="使用场景" v-if="persona.scenario.usage_scene">
+              {{ persona.scenario.usage_scene }}
+            </el-descriptions-item>
+            <el-descriptions-item label="交互渠道" v-if="persona.scenario.interaction_channel">
+              {{ persona.scenario.interaction_channel }}
+            </el-descriptions-item>
+            <el-descriptions-item label="内容偏好" v-if="persona.scenario.content_preference">
+              {{ persona.scenario.content_preference }}
+            </el-descriptions-item>
+          </el-descriptions>
+        </div>
+      </el-tab-pane>
+
+      <!-- 质量评估 -->
+      <el-tab-pane label="质量评估" name="quality" v-if="persona.quality_score">
         <div class="dimension-content">
           <el-card shadow="hover">
             <template #header>
               <div class="card-header">
-                <span>典型场景</span>
+                <span>质量评分详情</span>
               </div>
             </template>
-            <div class="scenario-list">
-              <div
-                v-for="(scene, index) in persona.scenario"
-                :key="index"
-                class="scenario-item"
-              >
-                <div class="scenario-index">{{ index + 1 }}</div>
-                <div class="scenario-content">{{ scene }}</div>
-              </div>
-            </div>
+            <el-descriptions :column="2" border>
+              <el-descriptions-item label="综合评分">
+                <el-tag :type="getQualityTagType(persona.quality_score.overall_score || persona.quality_score.overall)">
+                  {{ persona.quality_score.overall_score || persona.quality_score.overall || 'N/A' }}
+                </el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="质量等级">
+                <el-tag :type="getLevelTagType(persona.quality_score.overall_level)">
+                  {{ getLevelText(persona.quality_score.overall_level) }}
+                </el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="完整性">
+                {{ persona.quality_score.completeness || 'N/A' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="一致性">
+                {{ persona.quality_score.consistency || 'N/A' }}
+              </el-descriptions-item>
+              <el-descriptions-item label="真实性" v-if="persona.quality_score.authenticity">
+                {{ persona.quality_score.authenticity }}
+              </el-descriptions-item>
+              <el-descriptions-item label="可操作性" v-if="persona.quality_score.actionability">
+                {{ persona.quality_score.actionability }}
+              </el-descriptions-item>
+              <el-descriptions-item label="评估时间" :span="2" v-if="persona.quality_score.last_evaluated_at">
+                {{ formatDate(persona.quality_score.last_evaluated_at) }}
+              </el-descriptions-item>
+            </el-descriptions>
           </el-card>
         </div>
       </el-tab-pane>
@@ -186,22 +229,27 @@
         <div class="dimension-content">
           <el-card shadow="hover">
             <div class="communication-content">
-              <div v-if="persona.communication_style.tone">
-                <h4>语气</h4>
-                <p>{{ persona.communication_style.tone }}</p>
-              </div>
-              <div v-if="persona.communication_style.preferred_words">
-                <h4>常用词汇</h4>
-                <p>{{ persona.communication_style.preferred_words }}</p>
-              </div>
-              <div v-if="persona.communication_style.communication_habit">
-                <h4>沟通习惯</h4>
-                <p>{{ persona.communication_style.communication_habit }}</p>
-              </div>
-              <div v-if="persona.communication_style.description">
-                <h4>详细描述</h4>
-                <p>{{ persona.communication_style.description }}</p>
-              </div>
+              <p v-if="typeof persona.communication_style === 'string'">
+                {{ persona.communication_style }}
+              </p>
+              <template v-else>
+                <div v-if="persona.communication_style.tone">
+                  <h4>语气</h4>
+                  <p>{{ persona.communication_style.tone }}</p>
+                </div>
+                <div v-if="persona.communication_style.preferred_words">
+                  <h4>常用词汇</h4>
+                  <p>{{ persona.communication_style.preferred_words }}</p>
+                </div>
+                <div v-if="persona.communication_style.communication_habit">
+                  <h4>沟通习惯</h4>
+                  <p>{{ persona.communication_style.communication_habit }}</p>
+                </div>
+                <div v-if="persona.communication_style.description">
+                  <h4>详细描述</h4>
+                  <p>{{ persona.communication_style.description }}</p>
+                </div>
+              </template>
             </div>
           </el-card>
         </div>
@@ -217,26 +265,38 @@
               </div>
             </template>
             <div class="marketing-content">
-              <div v-if="persona.marketing_suggestions.channel">
-                <h4>推荐渠道</h4>
-                <p>{{ persona.marketing_suggestions.channel }}</p>
-              </div>
-              <div v-if="persona.marketing_suggestions.content_type">
-                <h4>内容形式</h4>
-                <p>{{ persona.marketing_suggestions.content_type }}</p>
-              </div>
-              <div v-if="persona.marketing_suggestions.key_message">
-                <h4>核心信息</h4>
-                <p>{{ persona.marketing_suggestions.key_message }}</p>
-              </div>
-              <div v-if="persona.marketing_suggestions.promotion_strategy">
-                <h4>推广策略</h4>
-                <p>{{ persona.marketing_suggestions.promotion_strategy }}</p>
-              </div>
-              <div v-if="persona.marketing_suggestions.description">
-                <h4>详细建议</h4>
-                <p>{{ persona.marketing_suggestions.description }}</p>
-              </div>
+              <template v-if="Array.isArray(persona.marketing_suggestions)">
+                <div
+                  v-for="(suggestion, index) in persona.marketing_suggestions"
+                  :key="index"
+                  class="marketing-item"
+                >
+                  <span class="marketing-index">{{ index + 1 }}</span>
+                  <span class="marketing-text">{{ suggestion }}</span>
+                </div>
+              </template>
+              <template v-else>
+                <div v-if="persona.marketing_suggestions.channel">
+                  <h4>推荐渠道</h4>
+                  <p>{{ persona.marketing_suggestions.channel }}</p>
+                </div>
+                <div v-if="persona.marketing_suggestions.content_type">
+                  <h4>内容形式</h4>
+                  <p>{{ persona.marketing_suggestions.content_type }}</p>
+                </div>
+                <div v-if="persona.marketing_suggestions.key_message">
+                  <h4>核心信息</h4>
+                  <p>{{ persona.marketing_suggestions.key_message }}</p>
+                </div>
+                <div v-if="persona.marketing_suggestions.promotion_strategy">
+                  <h4>推广策略</h4>
+                  <p>{{ persona.marketing_suggestions.promotion_strategy }}</p>
+                </div>
+                <div v-if="persona.marketing_suggestions.description">
+                  <h4>详细建议</h4>
+                  <p>{{ persona.marketing_suggestions.description }}</p>
+                </div>
+              </template>
             </div>
           </el-card>
         </div>
@@ -310,6 +370,23 @@ const formatDate = (dateStr) => {
 const getTagType = (index) => {
   const types = ['', 'success', 'warning', 'danger', 'info']
   return types[index % types.length]
+}
+
+const getQualityTagType = (score) => {
+  if (score >= 90) return 'success'
+  if (score >= 75) return ''
+  if (score >= 60) return 'warning'
+  return 'danger'
+}
+
+const getLevelTagType = (level) => {
+  const map = { excellent: 'success', good: '', fair: 'warning', poor: 'danger' }
+  return map[level] || ''
+}
+
+const getLevelText = (level) => {
+  const map = { excellent: '优秀', good: '良好', fair: '一般', poor: '较差' }
+  return map[level] || '未知'
 }
 
 // 切换原始数据视图
@@ -487,6 +564,43 @@ const handleNew = () => {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.needs-text {
+  color: #606266;
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+.marketing-item {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.marketing-item:last-child {
+  border-bottom: none;
+}
+
+.marketing-index {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #409eff;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.marketing-text {
+  flex: 1;
+  color: #606266;
+  line-height: 1.6;
 }
 
 .communication-content h4,

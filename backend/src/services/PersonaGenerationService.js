@@ -3,9 +3,10 @@
  * 负责从数据源生成用户画像的完整流程
  */
 
-const { Persona, DataSource, Project } = require('../models');
+const { Persona, DataSource, Project, Evaluation } = require('../models');
 const llmManager = require('../services/llm');
 const PersonaPrompts = require('../prompts/PersonaPrompts');
+const PersonaQualityEvaluator = require('./PersonaQualityEvaluator');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -13,16 +14,15 @@ class PersonaGenerationService {
   constructor(options = {}) {
     this.options = options;
     this.llmProvider = null;
-    this.modelType = options.modelType || 'openai';
+    this.modelType = options.modelType || 'deepseek';
   }
 
   /**
    * 初始化 LLM 提供者
    */
-  async initLLM(modelType = 'openai') {
+  async initLLM(modelType = 'deepseek') {
     this.modelType = modelType;
 
-    // 如果指定了提供商且可用，切换到该提供商
     if (modelType && llmManager.providers[modelType]) {
       llmManager.switchProvider(modelType);
     }
@@ -33,18 +33,12 @@ class PersonaGenerationService {
 
   /**
    * 生成用户画像主流程
-   * @param {number} projectId - 项目ID
-   * @param {Array<number>} sourceDataIds - 数据源ID数组
-   * @param {Object} config - 生成配置
-   * @returns {Promise<Object>} - 生成的画像
    */
   async generate(projectId, sourceDataIds, config = {}) {
     const startTime = Date.now();
 
-    // 1. 获取数据源
     const sourceData = await this.fetchSourceData(sourceDataIds);
 
-    // 2. 创建画像记录
     const persona = await Persona.create({
       project_id: projectId,
       name: '生成中...',
@@ -54,17 +48,13 @@ class PersonaGenerationService {
     });
 
     try {
-      // 3. 根据配置选择生成模式
       let result;
       if (config.mode === 'quick') {
-        // 快速生成模式
         result = await this.generateQuick(sourceData, config);
       } else {
-        // 完整生成模式（分维度）
         result = await this.generateComprehensive(sourceData, config);
       }
 
-      // 4. 更新画像数据
       await persona.update({
         name: result.name || '未命名画像',
         summary: result.summary,
@@ -87,7 +77,6 @@ class PersonaGenerationService {
       return persona;
 
     } catch (error) {
-      // 更新失败状态
       await persona.update({
         status: 'failed',
         error_message: error.message
@@ -98,8 +87,6 @@ class PersonaGenerationService {
 
   /**
    * 获取数据源数据
-   * @param {Array<number>} sourceDataIds - 数据源ID数组
-   * @returns {Promise<Array>} - 数据源数据
    */
   async fetchSourceData(sourceDataIds) {
     const dataSources = await DataSource.findAll({
@@ -122,7 +109,6 @@ class PersonaGenerationService {
         } else if (ds.type === 'csv') {
           data = this.parseCSV(content);
         } else {
-          // 文本文件或其他类型
           data = { raw_text: content };
         }
 
@@ -149,8 +135,6 @@ class PersonaGenerationService {
 
   /**
    * 解析 CSV 内容
-   * @param {string} csvContent - CSV 内容
-   * @returns {Object} - 解析后的数据
    */
   parseCSV(csvContent) {
     const lines = csvContent.trim().split('\n');
@@ -172,7 +156,7 @@ class PersonaGenerationService {
   }
 
   /**
-   * 解析 CSV 行（处理引号内的逗号）
+   * 解析 CSV 行
    */
   parseCSVLine(line) {
     const result = [];
@@ -197,24 +181,18 @@ class PersonaGenerationService {
 
   /**
    * 快速生成模式
-   * 直接从原始数据生成简化版用户画像
    */
   async generateQuick(sourceData, config) {
-    await this.initLLM(config.modelType || 'openai');
+    await this.initLLM(config.modelType || 'deepseek');
 
-    // 合并所有数据源
     const combinedData = this.combineSourceData(sourceData);
-
-    // 构建 Prompt
     const prompt = PersonaPrompts.getQuickPrompt(combinedData);
 
-    // 调用 LLM
     const response = await this.llmProvider.chat([prompt], {
       temperature: config.temperature || 0.7,
       max_tokens: config.max_tokens || 2000
     });
 
-    // 解析 JSON
     const result = this.parseJSONResponse(response);
 
     return {
@@ -237,12 +215,10 @@ class PersonaGenerationService {
 
   /**
    * 完整生成模式
-   * 分维度生成画像（并行优化版本）
    */
   async generateComprehensive(sourceData, config) {
-    await this.initLLM(config.modelType || 'openai');
+    await this.initLLM(config.modelType || 'deepseek');
 
-    // 合并所有数据源
     const combinedData = this.combineSourceData(sourceData);
 
     const llmOptions = {
@@ -250,14 +226,12 @@ class PersonaGenerationService {
       max_tokens: config.max_tokens || 1500
     };
 
-    // 构建所有 prompts
     const demographicPrompt = PersonaPrompts.getDemographicPrompt(combinedData);
     const behavioralPrompt = PersonaPrompts.getBehavioralPrompt(combinedData);
     const psychologicalPrompt = PersonaPrompts.getPsychologicalPrompt(combinedData);
     const needsPrompt = PersonaPrompts.getNeedsPrompt(combinedData);
     const scenarioPrompt = PersonaPrompts.getScenarioPrompt(combinedData);
 
-    // 并行调用 LLM（优化性能）
     const [demographicResponse, behavioralResponse, psychologicalResponse, needsResponse, scenarioResponse] = await Promise.all([
       this.llmProvider.chat([demographicPrompt], llmOptions),
       this.llmProvider.chat([behavioralPrompt], llmOptions),
@@ -266,14 +240,12 @@ class PersonaGenerationService {
       this.llmProvider.chat([scenarioPrompt], llmOptions)
     ]);
 
-    // 解析各维度结果
     const demographic = this.parseJSONResponse(demographicResponse);
     const behavioral = this.parseJSONResponse(behavioralResponse);
     const psychological = this.parseJSONResponse(psychologicalResponse);
     const needs = this.parseJSONResponse(needsResponse);
     const scenario = this.parseJSONResponse(scenarioResponse);
 
-    // 6. 综合生成最终画像
     const comprehensivePrompt = PersonaPrompts.getComprehensivePrompt(
       demographic,
       behavioral,
@@ -332,25 +304,96 @@ class PersonaGenerationService {
    */
   parseJSONResponse(response) {
     if (!response) {
-      throw new Error('LLM 返回为空');
+      throw new Error("LLM 返回为空");
     }
 
-    // 尝试提取 JSON
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('无法从响应中解析 JSON');
+    let cleanedResponse = response
+      .replace(/```json\s*/g, '')
+      .replace(/```\s*/g, '')
+      .replace(/^\s*/, '')
+      .replace(/\s*$/, '');
+
+    let jsonStr = null;
+
+    const lastBraceMatch = cleanedResponse.match(/\{[\s\S]*\}$/);
+    if (lastBraceMatch) {
+      jsonStr = lastBraceMatch[0];
     }
+
+    if (!jsonStr) {
+      const firstBrace = cleanedResponse.indexOf('{');
+      const lastBrace = cleanedResponse.lastIndexOf('}');
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonStr = cleanedResponse.substring(firstBrace, lastBrace + 1);
+      }
+    }
+
+    if (!jsonStr) {
+      throw new Error("无法从响应中解析 JSON");
+    }
+
+    jsonStr = jsonStr.replace(/"/g, '"').replace(/"/g, '"');
+    jsonStr = jsonStr.replace(/'/g, "'").replace(/'/g, "'");
+    jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, '');
+    jsonStr = jsonStr.trim();
 
     try {
-      return JSON.parse(jsonMatch[0]);
+      return JSON.parse(jsonStr);
     } catch (error) {
-      console.error('JSON 解析失败:', error.message);
-      console.error('原始响应:', response);
-      throw new Error('JSON 解析失败: ' + error.message);
+      // 尝试修复常见问题
+      // 1. 移除尾随逗号
+      jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+      // 2. 替换中文标点符号（在引号外面的）
+      jsonStr = jsonStr.replace(/，(\s*[}":])/g, ',$1');
+      jsonStr = jsonStr.replace(/。(\s*[}":])/g, '.$1');
+      // 3. 移除多余空白
+      jsonStr = jsonStr.replace(/\s+/g, ' ').trim();
+
+      try {
+        return JSON.parse(jsonStr);
+      } catch (error2) {
+        // 最后尝试：只提取有效的JSON部分
+        console.error("JSON解析再次失败，尝试提取有效部分");
+        const validJson = this.extractValidJson(jsonStr);
+        if (validJson) {
+          return validJson;
+        }
+        throw new Error("JSON 解析失败: " + error2.message);
+      }
     }
   }
 
-  // 合并方法
+  /**
+   * 尝试从损坏的JSON中提取有效部分
+   */
+  extractValidJson(str) {
+    try {
+      // 尝试找到完整的JSON对象
+      let start = str.indexOf('{');
+      let depth = 0;
+      let end = -1;
+
+      for (let i = start; i < str.length; i++) {
+        if (str[i] === '{') depth++;
+        else if (str[i] === '}') {
+          depth--;
+          if (depth === 0) {
+            end = i;
+            break;
+          }
+        }
+      }
+
+      if (end > start) {
+        const jsonPart = str.substring(start, end + 1);
+        return JSON.parse(jsonPart);
+      }
+    } catch (e) {
+      console.error("提取有效JSON失败:", e.message);
+    }
+    return null;
+  }
+
   mergeDemographic(detailed, comprehensive) {
     return comprehensive || detailed;
   }
@@ -407,7 +450,7 @@ class PersonaGenerationService {
   async update(id, data) {
     const persona = await Persona.findByPk(id);
     if (!persona) {
-      throw new Error('画像不存在');
+      throw new Error("画像不存在");
     }
 
     const allowedFields = [
@@ -433,7 +476,7 @@ class PersonaGenerationService {
   async delete(id) {
     const persona = await Persona.findByPk(id);
     if (!persona) {
-      throw new Error('画像不存在');
+      throw new Error("画像不存在");
     }
 
     await persona.destroy();
@@ -442,15 +485,10 @@ class PersonaGenerationService {
 
   /**
    * 通过自然语言生成用户画像（极简模式）
-   * @param {number} projectId - 项目ID
-   * @param {string} naturalLanguageInput - 自然语言描述
-   * @param {Object} config - 生成配置
-   * @returns {Promise<Object>} - 生成的画像
    */
   async generateFromNaturalLanguage(projectId, naturalLanguageInput, config = {}) {
     const startTime = Date.now();
 
-    // 创建画像记录
     const persona = await Persona.create({
       project_id: projectId,
       name: '生成中...',
@@ -459,21 +497,19 @@ class PersonaGenerationService {
     });
 
     try {
-      await this.initLLM(config.modelType || 'openai');
+      await this.initLLM(config.modelType || 'deepseek');
 
-      // 构建自然语言生成 Prompt
       const prompt = PersonaPrompts.getNaturalLanguagePrompt(naturalLanguageInput, config);
 
-      // 调用 LLM
       const response = await this.llmProvider.chat([prompt], {
         temperature: config.temperature || 0.7,
         max_tokens: config.max_tokens || 2000
       });
 
-      // 解析 JSON
+      console.log("LLM原始响应:", response.substring(0, 300));
+
       const result = this.parseJSONResponse(response);
 
-      // 更新画像数据
       await persona.update({
         name: result.persona_name || '自然语言画像',
         summary: result.summary,
@@ -497,15 +533,44 @@ class PersonaGenerationService {
       const duration = Date.now() - startTime;
       console.log(`自然语言画像生成完成，耗时: ${duration}ms`);
 
+      // 自动评估画像质量
+      await this.autoEvaluate(persona);
+
       return persona;
 
     } catch (error) {
-      // 更新失败状态
       await persona.update({
         status: 'failed',
         error_message: error.message
       });
       throw error;
+    }
+  }
+/**
+   * 自动评估画像质量
+   */
+  async autoEvaluate(persona) {
+    try {
+      const evaluator = new PersonaQualityEvaluator();
+      const evaluationResult = await evaluator.evaluate(persona.toJSON ? persona.toJSON() : persona);
+
+      await persona.update({
+        quality_score: {
+          overall_score: evaluationResult.overall_score,
+          overall_level: evaluationResult.overall_level,
+          completeness: evaluationResult.dimensions.completeness.score,
+          consistency: evaluationResult.dimensions.consistency.score,
+          authenticity: evaluationResult.dimensions.authenticity.score,
+          actionability: evaluationResult.dimensions.actionability.score,
+          last_evaluated_at: new Date().toISOString()
+        }
+      });
+
+      console.log(`画像 ${persona.id} 自动评估完成，综合评分: ${evaluationResult.overall_score}`);
+      return evaluationResult;
+    } catch (error) {
+      console.error(`画像 ${persona.id} 自动评估失败:`, error.message);
+      return null;
     }
   }
 }

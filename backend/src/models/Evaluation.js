@@ -17,11 +17,12 @@ const Evaluation = sequelize.define('Evaluation', {
   },
   project_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'projects',
-      key: 'id'
-    }
+    allowNull: false
+  },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    defaultValue: null
   },
   overall_score: {
     type: DataTypes.FLOAT,

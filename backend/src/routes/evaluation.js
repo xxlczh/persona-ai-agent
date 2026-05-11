@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Persona, Evaluation, Project } = require('../models');
+const { Persona, Project } = require('../models');
 const PersonaQualityEvaluator = require('../services/PersonaQualityEvaluator');
 
 /**
@@ -25,24 +25,15 @@ router.post('/persona/:id', async (req, res) => {
     const evaluator = new PersonaQualityEvaluator();
     const evaluationResult = await evaluator.evaluate(persona.toJSON());
 
-    // 保存评估结果到数据库
-    const evaluation = await Evaluation.create({
-      persona_id: id,
-      overall_score: evaluationResult.overall_score,
-      overall_level: evaluationResult.overall_level,
-      completeness_score: evaluationResult.dimensions.completeness.score,
-      consistency_score: evaluationResult.dimensions.consistency.score,
-      authenticity_score: evaluationResult.dimensions.authenticity.score,
-      actionability_score: evaluationResult.dimensions.actionability.score,
-      details: evaluationResult,
-      evaluated_by: evaluated_by || 'system'
-    });
-
-    // 更新画像的最新质量评分
+    // 直接更新画像的质量评分
     await persona.update({
       quality_score: {
         overall_score: evaluationResult.overall_score,
         overall_level: evaluationResult.overall_level,
+        completeness: evaluationResult.dimensions.completeness.score,
+        consistency: evaluationResult.dimensions.consistency.score,
+        authenticity: evaluationResult.dimensions.authenticity.score,
+        actionability: evaluationResult.dimensions.actionability.score,
         last_evaluated_at: new Date().toISOString()
       }
     });
@@ -50,7 +41,12 @@ router.post('/persona/:id', async (req, res) => {
     res.status(201).json({
       success: true,
       message: '评估完成',
-      data: evaluation
+      data: {
+        persona_id: id,
+        overall_score: evaluationResult.overall_score,
+        overall_level: evaluationResult.overall_level,
+        dimensions: evaluationResult.dimensions
+      }
     });
   } catch (error) {
     console.error('评估失败:', error);
@@ -64,14 +60,13 @@ router.post('/persona/:id', async (req, res) => {
 
 /**
  * GET /api/evaluation/history/:personaId
- * 获取指定画像的评估历史
+ * 获取指定画像的评估历史（从画像的质量评分历史记录）
  */
 router.get('/history/:personaId', async (req, res) => {
   try {
     const { personaId } = req.params;
-    const { limit = 10, offset = 0 } = req.query;
 
-    // 验证画像是否存在
+    // 获取画像
     const persona = await Persona.findByPk(personaId);
     if (!persona) {
       return res.status(404).json({
@@ -80,21 +75,24 @@ router.get('/history/:personaId', async (req, res) => {
       });
     }
 
-    // 获取评估历史
-    const evaluations = await Evaluation.findAndCountAll({
-      where: { persona_id: personaId },
-      order: [['created_at', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset)
-    });
+    // 如果有历史评估记录，从评估详情 JSON 中恢复
+    const history = [];
+    if (persona.quality_score && persona.quality_score.last_evaluated_at) {
+      history.push({
+        persona_id: persona.id,
+        overall_score: persona.quality_score.overall_score,
+        overall_level: persona.quality_score.overall_level,
+        evaluated_at: persona.quality_score.last_evaluated_at
+      });
+    }
 
     res.json({
       success: true,
       data: {
-        evaluations: evaluations.rows,
-        total: evaluations.count,
-        limit: parseInt(limit),
-        offset: parseInt(offset)
+        evaluations: history,
+        total: history.length,
+        limit: 10,
+        offset: 0
       }
     });
   } catch (error) {
@@ -155,16 +153,29 @@ router.get('/statistics/:projectId', async (req, res) => {
       });
     }
 
-    // 获取项目下所有画像的评估记录
-    const personaIds = personas.map(p => p.id);
-    const evaluations = await Evaluation.findAll({
-      where: {
-        persona_id: { [require('sequelize').Op.in]: personaIds }
-      },
-      order: [['created_at', 'DESC']]
-    });
+    // 辅助函数：将 JSON 字符串或对象转换为质量评分对象
+    const getQualityScore = (p) => {
+      if (!p.quality_score) return null;
+      if (typeof p.quality_score === 'string') {
+        try {
+          return JSON.parse(p.quality_score);
+        } catch {
+          return null;
+        }
+      }
+      return p.quality_score;
+    };
 
-    if (evaluations.length === 0) {
+    // 统计有质量评分的画像（检查 overall 或 overall_score 字段）
+    const personasWithScores = personas.filter(p => {
+      const qs = getQualityScore(p);
+      // 检查 overall 或 overall_score 字段
+      const hasScore = qs && (qs.overall !== undefined || qs.overall_score !== undefined);
+      return hasScore;
+    });
+    const totalEvaluations = personasWithScores.length;
+
+    if (totalEvaluations === 0) {
       return res.json({
         success: true,
         data: {
@@ -190,24 +201,59 @@ router.get('/statistics/:projectId', async (req, res) => {
     }
 
     // 计算统计数据
-    const totalEvaluations = evaluations.length;
-    const sumScore = evaluations.reduce((sum, e) => sum + e.overall_score, 0);
+    const sumScore = personasWithScores.reduce((sum, p) => {
+      const qs = getQualityScore(p);
+      let score = qs?.overall || qs?.overall_score || 0;
+      // 如果分数小于1，说明是0-1范围，需要转换为0-100
+      if (score < 1) score = score * 100;
+      return sum + score;
+    }, 0);
     const averageScore = sumScore / totalEvaluations;
 
-    // 分数分布
-    const scoreDistribution = {
-      excellent: evaluations.filter(e => e.overall_level === 'excellent').length,
-      good: evaluations.filter(e => e.overall_level === 'good').length,
-      fair: evaluations.filter(e => e.overall_level === 'fair').length,
-      poor: evaluations.filter(e => e.overall_level === 'poor').length
+    // 分数分布 - 根据分数判断等级
+    const getLevelFromScore = (qs) => {
+      const score = (qs?.overall || qs?.overall_score || 0) < 1
+        ? (qs?.overall || qs?.overall_score || 0) * 100
+        : (qs?.overall || qs?.overall_score || 0);
+      if (score >= 90) return 'excellent';
+      if (score >= 75) return 'good';
+      if (score >= 60) return 'fair';
+      return 'poor';
     };
 
-    // 维度平均分
+    const scoreDistribution = {
+      excellent: personasWithScores.filter(p => getLevelFromScore(getQualityScore(p)) === 'excellent').length,
+      good: personasWithScores.filter(p => getLevelFromScore(getQualityScore(p)) === 'good').length,
+      fair: personasWithScores.filter(p => getLevelFromScore(getQualityScore(p)) === 'fair').length,
+      poor: personasWithScores.filter(p => getLevelFromScore(getQualityScore(p)) === 'poor').length
+    };
+
+    // 维度平均分 - 转换为0-100范围
     const dimensionAverages = {
-      completeness: evaluations.reduce((sum, e) => sum + (e.completeness_score || 0), 0) / totalEvaluations,
-      consistency: evaluations.reduce((sum, e) => sum + (e.consistency_score || 0), 0) / totalEvaluations,
-      authenticity: evaluations.reduce((sum, e) => sum + (e.authenticity_score || 0), 0) / totalEvaluations,
-      actionability: evaluations.reduce((sum, e) => sum + (e.actionability_score || 0), 0) / totalEvaluations
+      completeness: personasWithScores.reduce((sum, p) => {
+        const qs = getQualityScore(p);
+        let val = qs?.completeness || 0;
+        if (val < 1) val = val * 100;
+        return sum + val;
+      }, 0) / totalEvaluations,
+      consistency: personasWithScores.reduce((sum, p) => {
+        const qs = getQualityScore(p);
+        let val = qs?.consistency || 0;
+        if (val < 1) val = val * 100;
+        return sum + val;
+      }, 0) / totalEvaluations,
+      authenticity: personasWithScores.reduce((sum, p) => {
+        const qs = getQualityScore(p);
+        let val = qs?.authenticity || 0;
+        if (val < 1) val = val * 100;
+        return sum + val;
+      }, 0) / totalEvaluations,
+      actionability: personasWithScores.reduce((sum, p) => {
+        const qs = getQualityScore(p);
+        let val = qs?.actionability || 0;
+        if (val < 1) val = val * 100;
+        return sum + val;
+      }, 0) / totalEvaluations
     };
 
     // 保留两位小数
@@ -215,23 +261,27 @@ router.get('/statistics/:projectId', async (req, res) => {
       dimensionAverages[key] = Math.round(dimensionAverages[key] * 10) / 10;
     });
 
-    // 获取最新评估记录 (每个画像取最新的)
-    const latestByPersona = {};
-    evaluations.forEach(e => {
-      if (!latestByPersona[e.persona_id] || new Date(e.created_at) > new Date(latestByPersona[e.persona_id].created_at)) {
-        latestByPersona[e.persona_id] = e;
-      }
-    });
-
-    const latestEvaluations = Object.values(latestByPersona)
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    // 获取最新评估记录（按 last_evaluated_at 排序，没有则按 id 排序）
+    const latestEvaluations = [...personasWithScores]
+      .sort((a, b) => {
+        const qsA = getQualityScore(a);
+        const qsB = getQualityScore(b);
+        const dateA = qsA?.last_evaluated_at ? new Date(qsA.last_evaluated_at) : new Date(0);
+        const dateB = qsB?.last_evaluated_at ? new Date(qsB.last_evaluated_at) : new Date(0);
+        return dateB - dateA;
+      })
       .slice(0, 5)
-      .map(e => ({
-        persona_id: e.persona_id,
-        overall_score: e.overall_score,
-        overall_level: e.overall_level,
-        evaluated_at: e.created_at
-      }));
+      .map(p => {
+        const qs = getQualityScore(p);
+        const score = qs?.overall || qs?.overall_score || 0;
+        const normalizedScore = score < 1 ? score * 100 : score;
+        return {
+          persona_id: p.id,
+          overall_score: Math.round(normalizedScore),
+          overall_level: getLevelFromScore(qs),
+          evaluated_at: qs?.last_evaluated_at || p.created_at
+        };
+      });
 
     res.json({
       success: true,

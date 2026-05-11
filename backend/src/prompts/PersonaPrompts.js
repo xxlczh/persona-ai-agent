@@ -283,58 +283,57 @@ ${JSON.stringify(scenario, null, 2)}
    * 用于直接从自然语言描述生成用户画像
    */
   static getNaturalLanguagePrompt(naturalLanguageInput, config = {}) {
+    const { industry, productDescription } = config;
+
+    const industryContext = {
+      '游戏': '游戏行业核心特征：注重玩法创新、社交开黑、氪金点与平衡性、角色造型与技能特效、赛事与排名系统。手游用户碎片化时间多，端游用户追求沉浸体验。',
+      '美妆护肤': '美妆护肤行业核心特征：注重成分功效、肤质适配、性价比、口碑种草、包装颜值、季节性与节日促销。决策受KOL和社区评测影响大。',
+      '3C数码': '3C数码行业核心特征：注重性能参数、性价比、评测对比、售后保障、新品发布节奏、设备兼容性。男性用户占比高，决策理性。',
+      '电商零售': '电商零售行业核心特征：注重价格优惠、物流速度、正品保障、用户评价、促销活动、品类丰富度。冲动消费和节庆消费明显。',
+      '教育学习': '教育学习行业核心特征：注重师资力量、课程效果、学习氛围、课后辅导、价格敏感度、证书认证。家长决策与用户分离现象明显。',
+      '职场效率工具': '职场效率工具行业核心特征：注重效率提升、学习成本、协作能力、数据安全、定价模式（订阅制）、集成生态。决策者与使用者常不同。',
+      '健康健身': '健康健身行业核心特征：注重效果反馈、专业指导、便捷性、隐私性、社群激励、产品安全性。健身习惯养成难，流失率高。',
+      '母婴亲子': '母婴亲子行业核心特征：注重安全性、品质感、便利性、口碑推荐、年龄适配、亲子互动。决策者多为妈妈，注重专家建议。',
+      '内容社区': '内容社区行业核心特征：注重内容质量、创作者生态、社区氛围、互动激励、内容分发算法、变现能力。内容消费碎片化，创作门槛重要。',
+      '金融理财': '金融理财行业核心特征：注重安全性、收益稳定性、专业门槛、风险控制、便捷性、监管合规。用户风险偏好差异大，学习成本高。',
+      '旅游出行': '旅游出行行业核心特征：注重目的地吸引力、价格合理性、便利性、评价口碑、行程灵活性、突发事件应对。决策周期长，复购率低。',
+      '其他': '通用消费品特征：注重品质、价格、便利性、口碑。用户群体广泛，需求多元。'
+    };
+
+    const industryInfo = industryContext[industry] || industryContext['其他'];
+    const productInfo = productDescription ? `\n## 产品定位\n${productDescription}` : '';
+
     return {
       role: 'user',
-      content: `你是一个专业的用户画像分析师。用户用自然语言描述了他们想要的用户画像，请根据描述生成相应的用户画像。
+      content: `你是一个专业的用户画像分析师。根据以下信息生成精准的用户画像。
+
+## 行业背景
+${industryInfo}${productInfo}
 
 ## 用户需求描述
 ${naturalLanguageInput}
 
-${config.useIndustryData ? '## 行业背景\n请结合相关行业通用数据增强画像的准确性和完整性。' : ''}
+## 画像要求
+请结合行业特征和产品描述，生成一个具有行业特色、精准可落地用户画像。
 
-## 输出要求
-请生成一个完整、专业的用户画像，包含以下维度：
+【重要】你必须且只能输出一个完整的JSON对象，不要输出任何其他文字、解释、markdown格式或代码块标记。
 
+JSON格式示例：
+{"persona_name":"年轻游戏爱好者","summary":"描述...","demographic":{"age_group":"20-30岁",...},...}
+
+必须包含以下所有字段：
 {
-  "persona_name": "string", // 画像名称，如"年轻游戏爱好者"
-  "summary": "string", // 3-4句话的用户特征描述，包含核心特点和行为模式
-  "demographic": {
-    "age_group": "string", // 如"20-30岁"
-    "gender": "string", // 如"男性为主"
-    "occupation": "string", // 如"年轻职场人士"
-    "income_level": "string", // 如"中等收入"
-    "education": "string", // 如"本科及以上"
-    "location": "string" // 如"一二线城市"
-  },
-  "behavioral": {
-    "shopping_habit": "string", // 购物习惯描述
-    "online_preference": "string", // 线上行为偏好
-    "brand_loyalty": "string", // 品牌忠诚度
-    "price_sensitivity": "string", // 价格敏感度
-    "decision_factor": "string" // 主要决策因素
-  },
-  "psychological": {
-    "values": "string", // 核心价值观
-    "motivation": "string", // 购买动机
-    "pain_points": "string", // 痛点
-    "aspirations": "string" // 追求/愿望
-  },
-  "needs": {
-    "main_need": "string", // 主要需求
-    "sub_needs": ["string"], // 次要需求
-    "unmet_needs": "string" // 未被满足的需求
-  },
-  "scenario": {
-    "usage_scene": "string", // 典型使用场景
-    "interaction_channel": "string", // 偏好互动渠道
-    "content_preference": "string" // 内容偏好
-  },
-  "tags": ["string"], // 8-10个标签，用于快速识别
-  "communication_style": "string", // 沟通风格建议
-  "marketing_suggestions": ["string"] // 2-3条营销建议
-}
-
-请确保画像逻辑清晰、自洽，标签准确有区分度。`
+  "persona_name": "画像名称（如：硬核竞技型玩家、精致妈妈等）",
+  "summary": "3-4句话的用户特征描述",
+  "demographic": {"age_group":"年龄段","gender":"性别","occupation":"职业","income_level":"收入水平","education":"学历","location":"地区"},
+  "behavioral": {"shopping_habit":"消费习惯","online_preference":"线上偏好","brand_loyalty":"品牌忠诚度","price_sensitivity":"价格敏感度","decision_factor":"决策因素"},
+  "psychological": {"values":"价值观","motivation":"动机","pain_points":"痛点","aspirations":"愿望/追求"},
+  "needs": {"main_need":"核心需求","sub_needs":["子需求1","子需求2"],"unmet_needs":"未满足需求"},
+  "scenario": {"usage_scene":"使用场景","interaction_channel":"交互渠道","content_preference":"内容偏好"},
+  "tags": ["标签1","标签2",...],
+  "communication_style": "沟通风格建议",
+  "marketing_suggestions": ["建议1","建议2",...]
+}`
     };
   }
 

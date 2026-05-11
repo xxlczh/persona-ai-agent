@@ -46,6 +46,16 @@
             </div>
           </el-tab-pane>
 
+          <el-tab-pane label="历史画像" name="history">
+            <div class="tab-content">
+              <PersonaHistory
+                v-if="projectId"
+                :project-id="projectId"
+                @create="activeTab = 'generation'"
+              />
+            </div>
+          </el-tab-pane>
+
           <el-tab-pane label="质量评估" name="evaluation">
             <div class="tab-content">
               <EvaluationDashboard
@@ -100,6 +110,7 @@ import PersonaGenerator from '@/components/PersonaGenerator.vue'
 import SimpleModeGenerator from '@/components/SimpleModeGenerator.vue'
 import BatchGenerator from '@/components/BatchGenerator.vue'
 import EvaluationDashboard from '@/components/EvaluationDashboard.vue'
+import PersonaHistory from '@/components/PersonaHistory.vue'
 import SurveyGenerator from '@/components/SurveyGenerator.vue'
 import MarketingScriptGenerator from '@/components/MarketingScriptGenerator.vue'
 import ProductSuggestionGenerator from '@/components/ProductSuggestionGenerator.vue'
@@ -124,9 +135,9 @@ const fetchProjectDetail = async () => {
   if (!projectId.value) return
   try {
     const res = await request.get(`/api/projects/${projectId.value}`)
-    if (res.data) {
-      projectMode.value = res.data.settings?.mode || 'precise'
-      naturalLanguageInput.value = res.data.settings?.naturalLanguageInput || ''
+    if (res.data?.project) {
+      projectMode.value = res.data.project.settings?.mode || 'precise'
+      naturalLanguageInput.value = res.data.project.settings?.naturalLanguageInput || ''
       // 极简模式默认跳到画像生成
       if (projectMode.value === 'simple') {
         activeTab.value = 'generation'

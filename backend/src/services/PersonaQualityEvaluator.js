@@ -294,20 +294,21 @@ class PersonaQualityEvaluator {
    * 检查心理与场景一致性
    */
   checkPsychologicalScenarioConsistency(psychological, scenario) {
-    const values = psychological?.values || [];
-    const useCases = scenario?.use_cases || [];
+    const valuesRaw = psychological?.values;
+    const values = Array.isArray(valuesRaw) ? valuesRaw : (typeof valuesRaw === 'string' && valuesRaw ? [valuesRaw] : []);
+    const useCasesRaw = scenario?.use_cases;
+    const useCases = Array.isArray(useCasesRaw) ? useCasesRaw : (typeof useCasesRaw === 'string' && useCasesRaw ? [useCasesRaw] : []);
 
     if (values.length === 0 && useCases.length === 0) {
       return { isConsistent: true, reason: '缺少必要字段' };
     }
 
     // 检查价值观与使用场景是否匹配 (简化版)
-    const hasConvenienceValue = values.some(v =>
-      v.toLowerCase().includes('便利') || v.toLowerCase().includes('效率')
-    );
-    const hasConvenienceUseCase = useCases.some(u =>
-      u.toLowerCase().includes('便捷') || u.toLowerCase().includes('快速')
-    );
+    const valuesText = Array.isArray(values) ? values.join('') : String(values || '');
+    const useCasesText = Array.isArray(useCases) ? useCases.join('') : String(useCases || '');
+
+    const hasConvenienceValue = valuesText.includes('便利') || valuesText.includes('效率');
+    const hasConvenienceUseCase = useCasesText.includes('便捷') || useCasesText.includes('快速');
 
     if (hasConvenienceValue && !hasConvenienceUseCase && useCases.length > 0) {
       return {
@@ -326,7 +327,8 @@ class PersonaQualityEvaluator {
    */
   checkDemographicBehaviorConsistency(demographic, behavioral) {
     const location = demographic?.location;
-    const preferredChannels = behavioral?.preferred_channels || [];
+    const channelsRaw = behavioral?.preferred_channels;
+    const preferredChannels = Array.isArray(channelsRaw) ? channelsRaw : (typeof channelsRaw === 'string' && channelsRaw ? [channelsRaw] : []);
 
     if (!location && preferredChannels.length === 0) {
       return { isConsistent: true, reason: '缺少必要字段' };
@@ -335,9 +337,8 @@ class PersonaQualityEvaluator {
     // 一线城市用户更倾向于线上渠道
     const firstTierCities = ['北京', '上海', '广州', '深圳', '杭州', '南京'];
     const isFirstTier = firstTierCities.some(city => location?.includes(city));
-    const hasOfflineChannel = preferredChannels.some(ch =>
-      ['线下', '门店', '实体店'].some(offline => ch.includes(offline))
-    );
+    const channelsText = preferredChannels.join('');
+    const hasOfflineChannel = channelsText.includes('线下') || channelsText.includes('门店') || channelsText.includes('实体店');
 
     if (isFirstTier && !hasOfflineChannel && preferredChannels.length > 0) {
       // 一线城市用户无线上渠道偏好，可能不一致但不是严重问题

@@ -22,6 +22,9 @@ class CacheService {
    */
   async set(key, value, ttl = this.defaultTTL) {
     try {
+      if (redis.status !== 'ready') {
+        return false;
+      }
       const serialized = JSON.stringify(value);
       await redis.setex(key, ttl, serialized);
       return true;
@@ -38,6 +41,9 @@ class CacheService {
    */
   async get(key) {
     try {
+      if (redis.status !== 'ready') {
+        return null;
+      }
       const value = await redis.get(key);
       if (value) {
         return JSON.parse(value);

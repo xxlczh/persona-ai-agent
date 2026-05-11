@@ -1,7 +1,7 @@
 <template>
   <div class="simple-mode-generator">
     <el-alert
-      title="极简模式：直接通过自然语言描述生成画像"
+      title="极简模式：通过行业选择和产品描述生成精准用户画像"
       type="info"
       :closable="false"
       style="margin-bottom: 20px;"
@@ -15,23 +15,45 @@
         </div>
       </template>
 
-      <el-form :model="formData" label-width="120px">
+      <el-form :model="formData" label-width="140px">
+        <el-form-item label="行业/产品类型" required>
+          <el-select
+            v-model="formData.industry"
+            placeholder="请选择行业"
+            style="width: 100%;"
+          >
+            <el-option label="游戏（手游/端游）" value="游戏" />
+            <el-option label="美妆护肤" value="美妆护肤" />
+            <el-option label="3C数码" value="3C数码" />
+            <el-option label="电商零售" value="电商零售" />
+            <el-option label="教育学习" value="教育学习" />
+            <el-option label="职场效率工具" value="职场效率工具" />
+            <el-option label="健康健身" value="健康健身" />
+            <el-option label="母婴亲子" value="母婴亲子" />
+            <el-option label="内容社区（短视频/图文）" value="内容社区" />
+            <el-option label="金融理财" value="金融理财" />
+            <el-option label="旅游出行" value="旅游出行" />
+            <el-option label="其他" value="其他" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="产品/目标描述">
+          <el-input
+            v-model="formData.productDescription"
+            type="textarea"
+            :rows="2"
+            placeholder="简单描述您的产品，如：一款面向20-28岁女大学生的平价口红 / 硬核科幻类手游，主打组队打怪"
+          />
+          <div class="form-tip">选填，但有助于生成更精准的画像</div>
+        </el-form-item>
+
         <el-form-item label="用户需求描述">
           <el-input
             v-model="formData.naturalLanguageInput"
             type="textarea"
-            :rows="4"
-            placeholder="用自然语言描述您想要的画像，如：20-30岁手游玩家画像，用于英雄设计"
+            :rows="3"
+            placeholder="用自然语言描述您想要的画像，如：20-30岁手游玩家画像，热爱竞技，热衷社交"
           />
-        </el-form-item>
-
-        <el-form-item label="行业数据增强">
-          <el-switch
-            v-model="formData.useIndustryData"
-            active-text="启用"
-            inactive-text="关闭"
-          />
-          <div class="form-tip">启用后将结合行业通用数据提升画像准确性</div>
         </el-form-item>
 
         <el-form-item label="生成数量">
@@ -110,8 +132,9 @@ const props = defineProps({
 const emit = defineEmits(['generated'])
 
 const formData = ref({
+  industry: '',
+  productDescription: '',
   naturalLanguageInput: '',
-  useIndustryData: true,
   count: 1
 })
 
@@ -136,6 +159,10 @@ const addLog = (message) => {
 }
 
 const startGeneration = async () => {
+  if (!formData.value.industry) {
+    ElMessage.warning('请选择行业/产品类型')
+    return
+  }
   if (!formData.value.naturalLanguageInput.trim()) {
     ElMessage.warning('请输入用户需求描述')
     return
@@ -146,18 +173,19 @@ const startGeneration = async () => {
   logs.value = []
 
   try {
-    addLog('正在分析自然语言输入...')
-    await simulateProgress(20)
+    addLog('正在分析行业特征...')
+    await simulateProgress(15)
     addLog('正在构建 Prompt...')
-    await simulateProgress(40)
+    await simulateProgress(30)
     addLog('正在调用 LLM 生成画像...')
     await simulateProgress(70)
 
     // 调用生成 API
     const res = await personaApi.generateFromNaturalLanguage({
       projectId: props.projectId,
+      industry: formData.value.industry,
+      productDescription: formData.value.productDescription,
       naturalLanguageInput: formData.value.naturalLanguageInput,
-      useIndustryData: formData.value.useIndustryData,
       count: formData.value.count
     })
 
