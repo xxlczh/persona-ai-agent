@@ -28,11 +28,11 @@
           <div class="dimension-item">
             <div class="dimension-header">
               <span>完整性</span>
-              <span class="dimension-score">{{ evaluation.completeness_score || 0 }}</span>
+              <span class="dimension-score">{{ getDimensionScore('completeness') }}</span>
             </div>
             <el-progress
-              :percentage="evaluation.completeness_score || 0"
-              :color="getProgressColor(evaluation.completeness_score)"
+              :percentage="getDimensionScore('completeness')"
+              :color="getProgressColor(getDimensionScore('completeness'))"
               :stroke-width="10"
             />
             <div class="dimension-desc">
@@ -44,11 +44,11 @@
           <div class="dimension-item">
             <div class="dimension-header">
               <span>一致性</span>
-              <span class="dimension-score">{{ evaluation.consistency_score || 0 }}</span>
+              <span class="dimension-score">{{ getDimensionScore('consistency') }}</span>
             </div>
             <el-progress
-              :percentage="evaluation.consistency_score || 0"
-              :color="getProgressColor(evaluation.consistency_score)"
+              :percentage="getDimensionScore('consistency')"
+              :color="getProgressColor(getDimensionScore('consistency'))"
               :stroke-width="10"
             />
             <div class="dimension-desc">
@@ -60,11 +60,11 @@
           <div class="dimension-item">
             <div class="dimension-header">
               <span>真实性</span>
-              <span class="dimension-score">{{ evaluation.authenticity_score || 0 }}</span>
+              <span class="dimension-score">{{ getDimensionScore('authenticity') }}</span>
             </div>
             <el-progress
-              :percentage="evaluation.authenticity_score || 0"
-              :color="getProgressColor(evaluation.authenticity_score)"
+              :percentage="getDimensionScore('authenticity')"
+              :color="getProgressColor(getDimensionScore('authenticity'))"
               :stroke-width="10"
             />
             <div class="dimension-desc">
@@ -76,11 +76,11 @@
           <div class="dimension-item">
             <div class="dimension-header">
               <span>可操作性</span>
-              <span class="dimension-score">{{ evaluation.actionability_score || 0 }}</span>
+              <span class="dimension-score">{{ getDimensionScore('actionability') }}</span>
             </div>
             <el-progress
-              :percentage="evaluation.actionability_score || 0"
-              :color="getProgressColor(evaluation.actionability_score)"
+              :percentage="getDimensionScore('actionability')"
+              :color="getProgressColor(getDimensionScore('actionability'))"
               :stroke-width="10"
             />
             <div class="dimension-desc">
@@ -115,6 +115,21 @@ const props = defineProps({
     required: true
   }
 })
+
+// 获取维度分数（兼容新旧数据格式）
+const getDimensionScore = (dimension) => {
+  // 新格式：evaluation.completeness_score 等
+  if (props.evaluation[dimension + '_score'] !== undefined) {
+    return props.evaluation[dimension + '_score'] || 0
+  }
+  // 旧格式：从 quality_score 中获取
+  if (props.evaluation.quality_score) {
+    const val = props.evaluation.quality_score[dimension]
+    if (val === undefined || val === null) return 0
+    return val < 1 ? Math.round(val * 100) : Math.round(val)
+  }
+  return 0
+}
 
 // 格式化日期
 const formatDate = (dateStr) => {

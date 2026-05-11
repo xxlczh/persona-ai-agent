@@ -279,7 +279,9 @@ router.get('/statistics/:projectId', async (req, res) => {
           persona_id: p.id,
           overall_score: Math.round(normalizedScore),
           overall_level: getLevelFromScore(qs),
-          evaluated_at: qs?.last_evaluated_at || p.created_at
+          evaluated_at: qs?.last_evaluated_at || p.created_at,
+          // 包含维度分数（旧格式）
+          quality_score: qs || null
         };
       });
 
