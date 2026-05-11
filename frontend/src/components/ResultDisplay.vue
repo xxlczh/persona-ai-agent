@@ -187,19 +187,19 @@
                 </el-tag>
               </el-descriptions-item>
               <el-descriptions-item label="完整性">
-                {{ persona.quality_score.completeness || 'N/A' }}
+                {{ formatScore(persona.quality_score?.completeness) }}
               </el-descriptions-item>
               <el-descriptions-item label="一致性">
-                {{ persona.quality_score.consistency || 'N/A' }}
+                {{ formatScore(persona.quality_score?.consistency) }}
               </el-descriptions-item>
-              <el-descriptions-item label="真实性" v-if="persona.quality_score.authenticity">
-                {{ persona.quality_score.authenticity }}
+              <el-descriptions-item label="真实性">
+                {{ formatScore(persona.quality_score?.authenticity) }}
               </el-descriptions-item>
-              <el-descriptions-item label="可操作性" v-if="persona.quality_score.actionability">
-                {{ persona.quality_score.actionability }}
+              <el-descriptions-item label="可操作性">
+                {{ formatScore(persona.quality_score?.actionability) }}
               </el-descriptions-item>
-              <el-descriptions-item label="评估时间" :span="2" v-if="persona.quality_score.last_evaluated_at">
-                {{ formatDate(persona.quality_score.last_evaluated_at) }}
+              <el-descriptions-item label="评估时间" :span="2">
+                {{ persona.quality_score?.last_evaluated_at ? formatDate(persona.quality_score.last_evaluated_at) : 'N/A' }}
               </el-descriptions-item>
             </el-descriptions>
           </el-card>
@@ -364,6 +364,13 @@ const formatDate = (dateStr) => {
   if (!dateStr) return '-'
   const date = new Date(dateStr)
   return date.toLocaleString('zh-CN')
+}
+
+// 分数格式化（处理0-1范围转0-100，以及undefined/0显示N/A）
+const formatScore = (score) => {
+  if (score === undefined || score === null || score === 0) return 'N/A'
+  if (score < 1) score = score * 100  // 0-1范围转0-100
+  return Math.round(score)
 }
 
 // 获取标签类型

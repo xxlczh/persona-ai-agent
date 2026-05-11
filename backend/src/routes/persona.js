@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Persona, Project } = require('../models');
+const { Op } = require('sequelize');
 const PersonaGenerationService = require('../services/PersonaGenerationService');
 const BatchGenerationService = require('../services/BatchGenerationService');
 const cacheService = require('../services/CacheService');
@@ -249,12 +250,19 @@ router.post('/generate', async (req, res) => {
  */
 router.post('/generate-from-natural-language', async (req, res) => {
   try {
-    const { projectId, naturalLanguageInput, useIndustryData, count = 1 } = req.body;
+    const { projectId, naturalLanguageInput, industry, productDescription, count = 1 } = req.body;
 
     if (!projectId) {
       return res.status(400).json({
         success: false,
         message: '缺少 projectId 参数'
+      });
+    }
+
+    if (!industry) {
+      return res.status(400).json({
+        success: false,
+        message: '请选择行业/产品类型'
       });
     }
 
@@ -279,7 +287,7 @@ router.post('/generate-from-natural-language', async (req, res) => {
     const persona = await personaService.generateFromNaturalLanguage(
       projectId,
       naturalLanguageInput,
-      { useIndustryData }
+      { industry, productDescription }
     );
 
     res.status(201).json({
@@ -303,21 +311,7 @@ router.post('/generate-from-natural-language', async (req, res) => {
  */
 router.get('/list', async (req, res) => {
   try {
-    const { projectId, status, page = 1, pageSize = 20 } = req.query;
-
-    // 生成缓存键
-    const cacheKey = cacheService.generateListCacheKey({ projectId, status, page, pageSize });
-
-    // 尝试从缓存获取
-    const cachedData = await cacheService.getPersonaList(cacheKey);
-    if (cachedData) {
-      return res.json({
-        success: true,
-        message: '获取成功(缓存)',
-        data: cachedData,
-        cached: true
-      });
-    }
+    const { projectId, status, page = 1, pageSize = 20, keyword, sort = 'desc' } = req.query;
 
     const where = {};
     if (projectId) {
@@ -327,6 +321,14 @@ router.get('/list', async (req, res) => {
       where.status = status;
     }
 
+    // 关键词搜索（搜索名称和摘要）
+    if (keyword) {
+      where[Op.or] = [
+        { name: { [Op.like]: `%${keyword}%` } },
+        { summary: { [Op.like]: `%${keyword}%` } }
+      ];
+    }
+
     const limit = parseInt(pageSize);
     const offset = (parseInt(page) - 1) * limit;
 
@@ -334,27 +336,23 @@ router.get('/list', async (req, res) => {
       where,
       limit,
       offset,
-      order: [['created_at', 'DESC']],
+      order: [['created_at', sort.toUpperCase()]],
       include: [
         { model: Project, as: 'project', attributes: ['id', 'name'] }
       ]
     });
 
     const result = {
-      list: rows,
+      rows,
       total: count,
       page: parseInt(page),
       pageSize: limit
     };
 
-    // 缓存结果
-    await cacheService.setPersonaList(cacheKey, result);
-
     res.json({
       success: true,
       message: '获取成功',
-      data: result,
-      cached: false
+      data: result
     });
   } catch (error) {
     console.error('获取画像列表失败:', error);

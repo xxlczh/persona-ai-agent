@@ -1,0 +1,71 @@
+[
+  {
+    "user_id": "U001",
+    "username": "小明",
+    "age": 25,
+    "gender": "男",
+    "occupation": "软件工程师",
+    "income": 15000,
+    "purchase_history": [
+      {"item": "iPhone 15 Pro", "amount": 8999, "date": "2025-12-01"},
+      {"item": "机械键盘", "amount": 800, "date": "2025-11-15"}
+    ],
+    "browsing_behavior": {
+      "avg_daily_duration": 120,
+      "preferred_categories": ["数码", "游戏", "科技资讯"],
+      "active_hours": ["20:00-23:00"]
+    },
+    "interactions": {
+      "likes": 45,
+      "comments": 12,
+      "shares": 5
+    },
+    "feedback": "注重产品性能和品质，对价格敏感度中等"
+  },
+  {
+    "user_id": "U002",
+    "username": "小红",
+    "age": 28,
+    "gender": "女",
+    "occupation": "产品经理",
+    "income": 20000,
+    "purchase_history": [
+      {"item": "La Mer精华面霜", "amount": 2200, "date": "2026-01-10"},
+      {"item": "Coach手袋", "amount": 3500, "date": "2026-01-05"}
+    ],
+    "browsing_behavior": {
+      "avg_daily_duration": 90,
+      "preferred_categories": ["美妆", "服饰", "职场穿搭"],
+      "active_hours": ["12:00-13:00", "20:00-22:00"]
+    },
+    "interactions": {
+      "likes": 156,
+      "comments": 32,
+      "shares": 8
+    },
+    "feedback": "追求品质和生活仪式感，喜欢小众高端品牌"
+  },
+  {
+    "user_id": "U003",
+    "username": "阿强",
+    "age": 30,
+    "gender": "男",
+    "occupation": "设计师",
+    "income": 18000,
+    "purchase_history": [
+      {"item": "AJ运动鞋", "amount": 1500, "date": "2025-12-20"},
+      {"item": "潮流T恤", "amount": 600, "date": "2026-01-02"}
+    ],
+    "browsing_behavior": {
+      "avg_daily_duration": 150,
+      "preferred_categories": ["潮流服饰", "运动装备", "街头文化"],
+      "active_hours": ["22:00-01:00"]
+    },
+    "interactions": {
+      "likes": 89,
+      "comments": 22,
+      "shares": 15
+    },
+    "feedback": "追求个性和潮流，愿意为设计感付溢价"
+  }
+]

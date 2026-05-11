@@ -5,6 +5,7 @@
 const OpenAIAdapter = require('./OpenAIAdapter');
 const ErnieAdapter = require('./ErnieAdapter');
 const ZhipuAdapter = require('./ZhipuAdapter');
+const DeepSeekAdapter = require('./DeepSeekAdapter');
 
 class LLMManager {
   constructor() {
@@ -45,6 +46,14 @@ class LLMManager {
       });
     }
 
+    // DeepSeek
+    if (process.env.DEEPSEEK_API_KEY) {
+      this.providers.deepseek = new DeepSeekAdapter({
+        apiKey: process.env.DEEPSEEK_API_KEY,
+        model: process.env.DEEPSEEK_MODEL
+      });
+    }
+
     // 设置默认提供商
     if (this.providers[this.defaultProvider]) {
       this.currentProvider = this.providers[this.defaultProvider];
@@ -60,7 +69,7 @@ class LLMManager {
 
   /**
    * 切换 LLM 提供商
-   * @param {string} providerName - 提供商名称: 'openai' | 'ernie' | 'zhipu'
+   * @param {string} providerName - 提供商名称: 'openai' | 'ernie' | 'zhipu' | 'deepseek'
    * @returns {boolean} - 切换是否成功
    */
   switchProvider(providerName) {
