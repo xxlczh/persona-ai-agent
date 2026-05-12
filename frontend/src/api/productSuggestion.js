@@ -4,6 +4,10 @@ const productSuggestionApi = {
   generate(data) {
     return request.post('/product-suggestions/generate', data);
   },
+  // 兼容组件调用的别名
+  generateProductSuggestion(data) {
+    return this.generate(data);
+  },
   getList(projectId, params) {
     return request.get(`/product-suggestions/project/${projectId}`, { params });
   },
@@ -12,6 +16,10 @@ const productSuggestionApi = {
   },
   update(id, data) {
     return request.put(`/product-suggestions/${id}`, data);
+  },
+  // 兼容组件调用的别名
+  updateSuggestion(id, data) {
+    return this.update(id, data);
   },
   delete(id) {
     return request.delete(`/product-suggestions/${id}`);

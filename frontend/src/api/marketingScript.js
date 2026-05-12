@@ -4,6 +4,10 @@ const marketingScriptApi = {
   generate(data) {
     return request.post('/marketing-scripts/generate', data);
   },
+  // 兼容组件调用的别名
+  generateMarketingScript(data) {
+    return this.generate(data);
+  },
   getList(projectId, params) {
     return request.get(`/marketing-scripts/project/${projectId}`, { params });
   },
@@ -12,6 +16,10 @@ const marketingScriptApi = {
   },
   update(id, data) {
     return request.put(`/marketing-scripts/${id}`, data);
+  },
+  // 兼容组件调用的别名
+  updateScript(id, data) {
+    return this.update(id, data);
   },
   delete(id) {
     return request.delete(`/marketing-scripts/${id}`);

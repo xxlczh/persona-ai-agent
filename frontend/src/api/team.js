@@ -4,14 +4,26 @@ const teamApi = {
   create(data) {
     return request.post('/teams', data);
   },
+  // 兼容组件调用的别名
+  createTeam(data) {
+    return this.create(data);
+  },
   getMyTeams() {
     return request.get('/teams/my');
   },
   getDetail(id) {
     return request.get(`/teams/${id}`);
   },
+  // 兼容组件调用的别名
+  getTeamDetail(id) {
+    return this.getDetail(id);
+  },
   joinByCode(inviteCode) {
     return request.post('/teams/join', { inviteCode });
+  },
+  // 兼容组件调用的别名
+  joinTeamByCode(inviteCode) {
+    return this.joinByCode(inviteCode);
   },
   update(id, data) {
     return request.put(`/teams/${id}`, data);
@@ -21,6 +33,10 @@ const teamApi = {
   },
   removeMember(teamId, userId) {
     return request.delete(`/teams/${teamId}/members/${userId}`);
+  },
+  // 兼容组件调用的别名
+  removeTeamMember(teamId, userId) {
+    return this.removeMember(teamId, userId);
   },
   updateMemberRole(teamId, userId, role) {
     return request.put(`/teams/${teamId}/members/${userId}/role`, { role });
