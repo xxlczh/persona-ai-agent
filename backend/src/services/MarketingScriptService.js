@@ -16,7 +16,7 @@ class MarketingScriptService {
   /**
    * 初始化 LLM
    */
-  async initLLM(modelType = 'openai') {
+  async initLLM(modelType = 'deepseek') {
     if (modelType && llmManager.providers[modelType]) {
       llmManager.switchProvider(modelType);
     }
