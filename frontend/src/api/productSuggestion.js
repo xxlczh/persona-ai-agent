@@ -2,7 +2,7 @@ import request from './request';
 
 const productSuggestionApi = {
   generate(data) {
-    return request.post('/api/product-suggestions/generate', data);
+    return request.post('/api/product-suggestions/generate', data, { timeout: 120000 });
   },
   // 兼容组件调用的别名
   generateProductSuggestion(data) {

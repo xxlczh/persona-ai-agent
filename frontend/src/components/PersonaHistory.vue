@@ -101,6 +101,13 @@
             <el-button size="small" type="primary" text @click.stop="handleExport(persona)">
               导出
             </el-button>
+            <el-button
+              size="small"
+              :type="isFavorited(persona.id) ? 'warning' : 'info'"
+              @click.stop="toggleFavorite(persona)"
+            >
+              {{ isFavorited(persona.id) ? '已收藏' : '收藏' }}
+            </el-button>
             <el-button size="small" type="danger" text @click.stop="handleDelete(persona)">
               删除
             </el-button>
@@ -163,6 +170,7 @@ const pageSize = ref(12)
 const searchKeyword = ref('')
 const filterStatus = ref('')
 const sortBy = ref('desc')
+const favoriteIds = ref([])
 
 const detailDialogVisible = ref(false)
 const currentPersona = ref(null)
@@ -173,8 +181,31 @@ onMounted(() => {
   fetchPersonas()
 })
 
+const loadFavorites = () => {
+  favoriteIds.value = JSON.parse(localStorage.getItem('favoritePersonas') || '[]')
+}
+
+const isFavorited = (personaId) => {
+  return favoriteIds.value.includes(personaId)
+}
+
+const toggleFavorite = (persona) => {
+  const favorites = JSON.parse(localStorage.getItem('favoritePersonas') || '[]')
+  const idx = favorites.indexOf(persona.id)
+  if (idx > -1) {
+    favorites.splice(idx, 1)
+    ElMessage.success('已取消收藏')
+  } else {
+    favorites.push(persona.id)
+    ElMessage.success('已收藏到个人中心')
+  }
+  localStorage.setItem('favoritePersonas', JSON.stringify(favorites))
+  favoriteIds.value = favorites
+}
+
 const fetchPersonas = async () => {
   loading.value = true
+  loadFavorites()
   try {
     const res = await personaApi.getList({
       projectId: props.projectId,

@@ -88,6 +88,12 @@
                     :personas="personas"
                   />
                 </el-tab-pane>
+                <el-tab-pane label="历史记录" name="history">
+                  <ExtensionHistory
+                    v-if="projectId"
+                    :project-id="projectId"
+                  />
+                </el-tab-pane>
               </el-tabs>
             </div>
           </el-tab-pane>
@@ -114,6 +120,7 @@ import PersonaHistory from '@/components/PersonaHistory.vue'
 import SurveyGenerator from '@/components/SurveyGenerator.vue'
 import MarketingScriptGenerator from '@/components/MarketingScriptGenerator.vue'
 import ProductSuggestionGenerator from '@/components/ProductSuggestionGenerator.vue'
+import ExtensionHistory from '@/components/ExtensionHistory.vue'
 import TeamCollaboration from '@/components/TeamCollaboration.vue'
 import request from '@/api/request'
 

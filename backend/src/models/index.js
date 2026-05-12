@@ -11,6 +11,8 @@ const Survey = require('./Survey');
 const MarketingScript = require('./MarketingScript');
 const ProductSuggestion = require('./ProductSuggestion');
 
+const ProjectMember = require('./ProjectMember');
+
 // 建立关联关系
 User.hasMany(Project, { foreignKey: 'owner_id', as: 'projects' });
 Project.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
@@ -35,6 +37,11 @@ Evaluation.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
 Project.hasMany(PromptTemplate, { foreignKey: 'project_id', as: 'promptTemplates' });
 PromptTemplate.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
 
+// ProjectMember 关联
+Project.hasMany(ProjectMember, { foreignKey: 'project_id', as: 'members' });
+ProjectMember.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
+ProjectMember.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
 // User 与 PromptTemplate 关联
 User.hasMany(PromptTemplate, { foreignKey: 'created_by', as: 'createdTemplates' });
 PromptTemplate.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
@@ -43,6 +50,10 @@ PromptTemplate.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 // Team 关联
 User.hasMany(Team, { foreignKey: 'owner_id', as: 'ownedTeams' });
 Team.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
+
+// Team 与 Project 关联 (一个团队对应一个项目)
+Team.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
+Project.hasOne(Team, { foreignKey: 'project_id', as: 'team' });
 
 // TeamMember 关联
 Team.hasMany(TeamMember, { foreignKey: 'team_id', as: 'members' });
@@ -74,6 +85,7 @@ module.exports = {
   sequelize,
   User,
   Project,
+  ProjectMember,
   DataSource,
   Persona,
   Evaluation,

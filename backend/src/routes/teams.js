@@ -13,10 +13,10 @@ const teamService = new TeamService();
 // 创建团队
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, projectId } = req.body;
     const ownerId = req.user.id;
 
-    const team = await teamService.create({ name, description, ownerId });
+    const team = await teamService.create({ name, description, ownerId, projectId });
     success(res, team, '团队创建成功');
   } catch (error) {
     console.error('创建团队失败:', error);

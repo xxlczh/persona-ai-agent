@@ -11,14 +11,41 @@ class TeamService {
   /**
    * 创建团队
    */
-  async create({ name, description, ownerId }) {
-    // 生成邀请码
-    const inviteCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+  async create({ name, description, ownerId, projectId }) {
+    let inviteCode;
+
+    // 如果有项目，先获取或生成邀请码
+    if (projectId) {
+      // 检查项目是否已有团队
+      const existing = await Team.findOne({ where: { project_id: projectId } });
+      if (existing) {
+        throw new Error('该项目已有一个团队');
+      }
+
+      // 获取项目信息
+      const project = await Project.findByPk(projectId);
+
+      if (project && project.invite_code) {
+        // 项目已有邀请码，使用项目的
+        inviteCode = project.invite_code;
+      } else {
+        // 项目没有邀请码，生成新的并更新项目
+        inviteCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+        if (project) {
+          project.invite_code = inviteCode;
+          await project.save();
+        }
+      }
+    } else {
+      // 没有项目，生成新的邀请码
+      inviteCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+    }
 
     const team = await Team.create({
       name,
       description,
       owner_id: ownerId,
+      project_id: projectId || null,
       invite_code: inviteCode
     });
 
@@ -29,7 +56,12 @@ class TeamService {
       role: 'admin'
     });
 
-    return team;
+    // 转换为普通对象并确保 projectId 字段正确
+    const plainTeam = team.toJSON();
+    return {
+      ...plainTeam,
+      projectId: plainTeam.project_id
+    };
   }
 
   /**
@@ -62,20 +94,36 @@ class TeamService {
       }
     });
 
-    return allTeams;
+    // 转换为普通对象并确保 projectId 字段正确
+    return allTeams.map(team => {
+      const plainTeam = team.toJSON ? team.toJSON() : team;
+      return {
+        ...plainTeam,
+        projectId: plainTeam.project_id
+      };
+    });
   }
 
   /**
    * 获取团队详情
    */
   async getById(teamId) {
-    return Team.findByPk(teamId, {
+    const team = await Team.findByPk(teamId, {
       include: [
         { model: User, as: 'owner', attributes: ['id', 'username', 'email', 'avatar'] },
         { model: TeamMember, as: 'members', include: [{ model: User, as: 'user', attributes: ['id', 'username', 'email', 'avatar'] }] },
-        { model: Project, as: 'projects' }
+        { model: Project, as: 'project' }
       ]
     });
+
+    if (!team) return null;
+
+    // 转换并确保 projectId 字段正确
+    const plainTeam = team.toJSON ? team.toJSON() : team;
+    return {
+      ...plainTeam,
+      projectId: plainTeam.project_id
+    };
   }
 
   /**

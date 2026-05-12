@@ -84,6 +84,29 @@ const projectApi = {
       url: `/api/projects/${id}/archive`,
       method: 'post'
     });
+  },
+
+  /**
+   * 通过邀请码加入项目
+   * @param {string} inviteCode - 邀请码
+   */
+  joinByCode(inviteCode) {
+    return request({
+      url: '/api/projects/join',
+      method: 'post',
+      data: { inviteCode }
+    });
+  },
+
+  /**
+   * 获取项目邀请码
+   * @param {number|string} id - 项目 ID
+   */
+  getInviteCode(id) {
+    return request({
+      url: `/api/projects/${id}/invite-code`,
+      method: 'get'
+    });
   }
 };
 

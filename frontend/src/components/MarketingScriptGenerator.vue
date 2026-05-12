@@ -53,7 +53,11 @@
         <div class="script-header">
           <h3>{{ generatedScript.name }}</h3>
           <div class="script-actions">
-            <el-button size="small" @click="handleExport">导出脚本</el-button>
+            <el-button size="small" @click="handleExport('json')">导出JSON</el-button>
+            <el-button size="small" type="primary" @click="handleExport('markdown')">导出Markdown</el-button>
+            <el-button size="small" type="warning" @click="handleFavorite">
+              {{ isFavorited ? '已收藏' : '收藏' }}
+            </el-button>
           </div>
         </div>
 
@@ -138,6 +142,7 @@ const props = defineProps({
 
 const loading = ref(false);
 const generatedScript = ref(null);
+const isFavorited = ref(false);
 
 const config = reactive({
   personaId: null,
@@ -183,6 +188,7 @@ const handleGenerate = async () => {
     }
 
     generatedScript.value = res.data;
+    isFavorited.value = false;
     ElMessage.success('营销脚本生成成功');
   } catch (error) {
     console.error('生成营销脚本失败:', error);
@@ -192,15 +198,68 @@ const handleGenerate = async () => {
   }
 };
 
-const handleExport = () => {
-  const dataStr = JSON.stringify(generatedScript.value, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${generatedScript.value.name}.json`;
-  a.click();
+const handleExport = (format) => {
+  if (format === 'json') {
+    const dataStr = JSON.stringify(generatedScript.value, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${generatedScript.value.name}.json`;
+    a.click();
+  } else {
+    // Markdown export
+    let md = `# ${generatedScript.value.name}\n\n`;
+    md += `**类型：** ${getScriptTypeLabel(generatedScript.value.type)}\n`;
+    md += `**时长：** ${generatedScript.value.duration || '-'}秒\n\n`;
+
+    if (generatedScript.value.content?.scenes) {
+      md += `## 脚本内容\n\n`;
+      generatedScript.value.content.scenes.forEach((scene, i) => {
+        md += `### 镜头 ${i + 1} (${scene.time_range})\n`;
+        md += `- **景别：** ${scene.shot_type}\n`;
+        md += `- **画面：** ${scene.description}\n`;
+        if (scene.dialogue) md += `- **台词：** ${scene.dialogue}\n`;
+        if (scene.voiceover) md += `- **画外音：** ${scene.voiceover}\n`;
+        if (scene.bgm_suggestion) md += `- **BGM：** ${scene.bgm_suggestion}\n`;
+        md += '\n';
+      });
+    }
+
+    if (generatedScript.value.content?.hashtags?.length) {
+      md += `## 话题标签\n\n`;
+      md += generatedScript.value.content.hashtags.map(t => `#${t}`).join(' ');
+      md += '\n\n';
+    }
+
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${generatedScript.value.name}.md`;
+    a.click();
+  }
   ElMessage.success('导出成功');
+};
+
+const handleFavorite = async () => {
+  if (!generatedScript.value?.id) {
+    ElMessage.warning('请先生成脚本');
+    return;
+  }
+  const favorites = JSON.parse(localStorage.getItem('favoriteScripts') || '[]');
+  if (isFavorited.value) {
+    const idx = favorites.indexOf(generatedScript.value.id);
+    if (idx > -1) favorites.splice(idx, 1);
+    localStorage.setItem('favoriteScripts', JSON.stringify(favorites));
+    isFavorited.value = false;
+    ElMessage.info('已取消收藏');
+  } else {
+    favorites.push(generatedScript.value.id);
+    localStorage.setItem('favoriteScripts', JSON.stringify(favorites));
+    isFavorited.value = true;
+    ElMessage.success('已收藏到个人中心');
+  }
 };
 </script>
 

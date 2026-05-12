@@ -42,13 +42,17 @@
         <div class="report-header">
           <h3>{{ generatedReport.name }}</h3>
           <div class="report-actions">
-            <el-button size="small" @click="handleExport">导出报告</el-button>
+            <el-button size="small" @click="handleExport('json')">导出JSON</el-button>
+            <el-button size="small" type="primary" @click="handleExport('markdown')">导出Markdown</el-button>
+            <el-button size="small" type="warning" @click="handleFavorite">
+              {{ isFavorited ? '已收藏' : '收藏' }}
+            </el-button>
           </div>
         </div>
 
         <div class="report-meta">
           <el-tag size="small" type="success">
-            置信度：{{ (generatedReport.suggestions?.[0]?.confidence_score * 100 || 0).toFixed(0) }}%
+            置信度：{{ (generatedReport.confidence_score * 100 || 0).toFixed(0) }}%
           </el-tag>
         </div>
 
@@ -131,6 +135,7 @@ const props = defineProps({
 
 const loading = ref(false);
 const generatedReport = ref(null);
+const isFavorited = ref(false);
 
 const config = reactive({
   personaId: null,
@@ -173,6 +178,7 @@ const handleGenerate = async () => {
     }
 
     generatedReport.value = res.data;
+    isFavorited.value = false;
     ElMessage.success('产品建议报告生成成功');
   } catch (error) {
     console.error('生成产品建议失败:', error);
@@ -182,15 +188,67 @@ const handleGenerate = async () => {
   }
 };
 
-const handleExport = () => {
-  const dataStr = JSON.stringify(generatedReport.value, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${generatedReport.value.name}.json`;
-  a.click();
+const handleExport = (format) => {
+  if (format === 'json') {
+    const dataStr = JSON.stringify(generatedReport.value, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${generatedReport.value.name}.json`;
+    a.click();
+  } else {
+    // Markdown export
+    let md = `# ${generatedReport.value.name}\n\n`;
+    md += `**置信度：** ${(generatedReport.value.confidence_score * 100 || 0).toFixed(0)}%\n\n`;
+
+    if (generatedReport.value.summary) {
+      md += `## 执行摘要\n\n${generatedReport.value.summary}\n\n`;
+    }
+
+    if (generatedReport.value.suggestions?.length) {
+      md += `## 功能建议\n\n`;
+      generatedReport.value.suggestions.forEach((s, i) => {
+        md += `### ${i + 1}. ${s.feature_name} 【${getPriorityLabel(s.priority)}】\n`;
+        md += `- **功能描述：** ${s.feature_description}\n`;
+        md += `- **用户价值：** ${s.user_value}\n`;
+        md += `- **实现复杂度：** ${s.implementation_complexity}\n`;
+        md += `- **预期效果：** ${s.expected_impact}\n\n`;
+      });
+    }
+
+    if (generatedReport.value.competitor_analysis) {
+      md += `## 竞品分析\n\n${generatedReport.value.competitor_analysis.summary}\n\n`;
+    }
+
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${generatedReport.value.name}.md`;
+    a.click();
+  }
   ElMessage.success('导出成功');
+};
+
+const handleFavorite = async () => {
+  if (!generatedReport.value?.id) {
+    ElMessage.warning('请先生成报告');
+    return;
+  }
+  const favorites = JSON.parse(localStorage.getItem('favoriteSuggestions') || '[]');
+  if (isFavorited.value) {
+    const idx = favorites.indexOf(generatedReport.value.id);
+    if (idx > -1) favorites.splice(idx, 1);
+    localStorage.setItem('favoriteSuggestions', JSON.stringify(favorites));
+    isFavorited.value = false;
+    ElMessage.info('已取消收藏');
+  } else {
+    favorites.push(generatedReport.value.id);
+    localStorage.setItem('favoriteSuggestions', JSON.stringify(favorites));
+    isFavorited.value = true;
+    ElMessage.success('已收藏到个人中心');
+  }
 };
 </script>
 

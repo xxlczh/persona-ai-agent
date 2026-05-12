@@ -171,7 +171,34 @@ ${JSON.stringify(persona, null, 2)}
   "image_suggestions": ["string"] // 图片建议
 }
 
-请直接生成可使用的营销内容。`
+请直接生成可使用的营销内容。
+重要提示：请直接输出JSON格式的营销内容，不要包含任何前缀文字、解释或markdown语法。
+视频脚本格式：
+{
+  "script_name": "string",
+  "script_type": "${scriptType}",
+  "target_duration": ${duration},
+  "target_channel": "string",
+  "script_content": {
+    "scenes": [
+      {
+        "scene_number": "number",
+        "time_range": "string",
+        "shot_type": "string",
+        "description": "string",
+        "dialogue": "string",
+        "voiceover": "string",
+        "bgm_suggestion": "string",
+        "text_overlay": "string"
+      }
+    ]
+  },
+  "copy_variants": ["string"],
+  "hashtags": ["string"],
+  "target_url": "string"
+}
+
+请立即返回上述JSON格式的输出，不要添加任何其他内容。`
     };
   }
 
@@ -233,13 +260,14 @@ ${JSON.stringify(persona.marketing_suggestions || [], null, 2)}
 5. 建议要具体可落地，避免空泛
 
 ## 输出格式
+请直接输出JSON格式，不要有任何前缀文字、markdown语法或解释性文字：
 {
   "report_title": "string",
-  "executive_summary": "string", // 执行摘要
+  "executive_summary": "string",
   "user_profile_summary": {
-    "key_traits": ["string"], // 关键特征
-    "main_pain_points": ["string"], // 主要痛点
-    "unmet_needs": ["string"] // 未满足需求
+    "key_traits": ["string"],
+    "main_pain_points": ["string"],
+    "unmet_needs": ["string"]
   },
   "suggestions": [
     {
@@ -276,10 +304,10 @@ ${JSON.stringify(persona.marketing_suggestions || [], null, 2)}
       "timeline": "string"
     }
   },
-  "confidence_score": "number" // 建议置信度 0-1
+  "confidence_score": "number"
 }
 
-请生成专业、详细、可执行的产品建议报告。`
+请立即返回上述JSON格式的输出，不要添加任何其他内容。`
     };
   }
 

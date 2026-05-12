@@ -2,7 +2,7 @@ import request from './request';
 
 const surveyApi = {
   generate(data) {
-    return request.post('/api/surveys/generate', data);
+    return request.post('/api/surveys/generate', data, { timeout: 120000 });
   },
   // 兼容组件调用的别名
   generateSurvey(data) {

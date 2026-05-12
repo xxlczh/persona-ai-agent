@@ -68,6 +68,7 @@ class ProductSuggestionService {
       suggestions: reportData.suggestions || [],
       priorities: reportData.priorities || {},
       competitor_analysis: reportData.competitor_analysis || null,
+      confidence_score: reportData.confidence_score || null,
       status: 'draft',
       created_by: userId
     });
@@ -83,16 +84,43 @@ class ProductSuggestionService {
       throw new Error('LLM 返回为空');
     }
 
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('无法从响应中解析 JSON');
-    }
-
+    // 尝试多种方式解析 JSON
+    // 1. 先尝试直接解析（LLM 返回纯 JSON 的情况）
     try {
-      return JSON.parse(jsonMatch[0]);
-    } catch (error) {
-      console.error('JSON 解析失败:', error.message);
-      throw new Error('JSON 解析失败: ' + error.message);
+      return JSON.parse(response);
+    } catch (e) {
+      // 2. 尝试找 JSON 代码块 ```json ... ```
+      const jsonBlockMatch = response.match(/```json\s*([\s\S]*?)```/);
+      if (jsonBlockMatch) {
+        try {
+          return JSON.parse(jsonBlockMatch[1]);
+        } catch (e2) {
+          // 继续尝试其他方式
+        }
+      }
+
+      // 3. 尝试找 ``` ... ``` 包裹的 JSON
+      const codeBlockMatch = response.match(/```\s*([\s\S]*?)```/);
+      if (codeBlockMatch) {
+        try {
+          return JSON.parse(codeBlockMatch[1]);
+        } catch (e3) {
+          // 继续尝试其他方式
+        }
+      }
+
+      // 4. 尝试找 { 到最后一个 } 的完整 JSON 对象（处理 Markdown 包裹的情况）
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          return JSON.parse(jsonMatch[0]);
+        } catch (e4) {
+          console.error('JSON 解析失败:', e4.message);
+          throw new Error('JSON 解析失败: ' + e4.message);
+        }
+      }
+
+      throw new Error('无法从响应中解析 JSON');
     }
   }
 

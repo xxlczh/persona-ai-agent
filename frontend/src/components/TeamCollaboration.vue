@@ -4,43 +4,43 @@
       <template #header>
         <div class="card-header">
           <span>👥 团队协作</span>
-          <el-button type="primary" size="small" @click="handleCreateTeam">
+          <el-button v-if="!teams.length" type="primary" size="small" @click="handleCreateTeam">
             创建团队
           </el-button>
         </div>
       </template>
 
-      <!-- 团队列表 -->
-      <div v-if="!selectedTeam" class="team-list">
-        <el-empty v-if="teams.length === 0" description="暂无团队">
-          <el-button type="primary" @click="handleCreateTeam">创建第一个团队</el-button>
-        </el-empty>
-        <div v-else class="team-cards">
-          <el-card
-            v-for="team in teams"
-            :key="team.id"
-            class="team-card"
-            @click="selectTeam(team)"
-          >
-            <template #header>
-              <div class="team-header">
-                <span>{{ team.name }}</span>
-                <el-tag v-if="isTeamOwner(team)" size="small" type="success">所有者</el-tag>
-              </div>
-            </template>
-            <p>{{ team.description || '暂无描述' }}</p>
-            <div class="team-info">
-              <span>成员数: {{ team.members?.length || 0 }}</span>
-              <span>邀请码: {{ team.invite_code }}</span>
+      <!-- 有团队时显示团队列表 -->
+      <div v-if="teams.length && !selectedTeam" class="team-list">
+        <el-card
+          v-for="team in teams"
+          :key="team.id"
+          class="team-card"
+          @click="selectTeam(team)"
+        >
+          <template #header>
+            <div class="team-header">
+              <span>{{ team.name }}</span>
+              <el-tag v-if="isTeamOwner(team)" size="small" type="success">所有者</el-tag>
             </div>
-          </el-card>
-        </div>
+          </template>
+          <p>{{ team.description || '暂无描述' }}</p>
+          <div class="team-info">
+            <span>成员数: {{ team.members?.length || 0 }}</span>
+            <span>邀请码: {{ team.invite_code }}</span>
+          </div>
+        </el-card>
+      </div>
+
+      <!-- 无团队时显示空状态 -->
+      <div v-else-if="!teams.length" class="empty-state">
+        <p>暂无团队，点击上方按钮创建一个团队</p>
       </div>
 
       <!-- 团队详情 -->
-      <div v-else class="team-detail">
+      <div v-if="selectedTeam" class="team-detail">
         <div class="detail-header">
-          <el-button text @click="selectedTeam = null">← 返回团队列表</el-button>
+          <el-button text @click="selectedTeam = null">← 返回</el-button>
           <h3>{{ selectedTeam.name }}</h3>
           <el-tag>{{ selectedTeam.description || '团队' }}</el-tag>
         </div>
@@ -51,7 +51,6 @@
             {{ selectedTeam.invite_code }}
           </el-tag>
           <el-button size="small" @click="copyInviteCode">复制邀请码</el-button>
-          <el-button size="small" @click="showJoinDialog = true">通过邀请码加入</el-button>
         </div>
 
         <div class="members-section">
@@ -77,22 +76,6 @@
             </el-table-column>
           </el-table>
         </div>
-
-        <div class="projects-section">
-          <h4>团队项目</h4>
-          <p class="hint">将项目分配给团队后，团队成员可以查看</p>
-          <el-select v-model="selectedProjectId" placeholder="选择项目分配给团队" clearable>
-            <el-option
-              v-for="project in userProjects"
-              :key="project.id"
-              :label="project.name"
-              :value="project.id"
-            />
-          </el-select>
-          <el-button type="primary" size="small" @click="handleAssignProject" :disabled="!selectedProjectId">
-            分配项目
-          </el-button>
-        </div>
       </div>
     </el-card>
 
@@ -109,19 +92,6 @@
       <template #footer>
         <el-button @click="showCreateDialog = false">取消</el-button>
         <el-button type="primary" @click="confirmCreateTeam">创建</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 通过邀请码加入对话框 -->
-    <el-dialog v-model="showJoinDialog" title="加入团队" width="400px">
-      <el-form :model="joinForm" label-width="80px">
-        <el-form-item label="邀请码">
-          <el-input v-model="joinForm.inviteCode" placeholder="请输入邀请码" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showJoinDialog = false">取消</el-button>
-        <el-button type="primary" @click="confirmJoinTeam">加入</el-button>
       </template>
     </el-dialog>
   </div>
@@ -141,19 +111,11 @@ const props = defineProps({
 
 const teams = ref([]);
 const selectedTeam = ref(null);
-const userProjects = ref([]);
-const selectedProjectId = ref(null);
-
 const showCreateDialog = ref(false);
-const showJoinDialog = ref(false);
 
 const teamForm = reactive({
   name: '',
   description: ''
-});
-
-const joinForm = reactive({
-  inviteCode: ''
 });
 
 const isTeamOwner = (team) => {
@@ -166,10 +128,26 @@ const isTeamOwner = (team) => {
 // 获取团队列表
 const fetchTeams = async () => {
   try {
-    const res = await teamApi.getMyTeams();
-    teams.value = res.data || [];
+    const res = await teamApi.getMyTeams()
+    console.log('fetchTeams response:', res.data)
+
+    // 先显示所有团队不过滤
+    const allTeams = res.data || []
+    console.log('All teams count:', allTeams.length)
+    allTeams.forEach(t => {
+      console.log('  Team id:', t.id, 'name:', t.name, 'projectId:', t.projectId, 'project_id:', t.project_id)
+    })
+
+    // 过滤出当前项目的团队
+    if (props.projectId) {
+      teams.value = allTeams.filter(t => t.projectId == props.projectId)
+      console.log('Filtered teams count:', teams.value.length)
+    } else {
+      teams.value = allTeams
+    }
   } catch (error) {
-    console.error('获取团队列表失败:', error);
+    console.error('获取团队列表失败:', error)
+    ElMessage.error('获取团队列表失败')
   }
 };
 
@@ -197,17 +175,22 @@ const confirmCreateTeam = async () => {
     return;
   }
 
+  console.log('Creating team with projectId:', props.projectId);
   try {
-    await teamApi.createTeam({
+    const res = await teamApi.createTeam({
       name: teamForm.name,
-      description: teamForm.description
+      description: teamForm.description,
+      projectId: props.projectId
     });
+    console.log('Create response:', res.data);
+    console.log('Project ID in response:', res.data?.project_id);
     ElMessage.success('团队创建成功');
     showCreateDialog.value = false;
-    fetchTeams();
+    // 延迟一下再获取列表，确保数据库已更新
+    setTimeout(() => fetchTeams(), 500);
   } catch (error) {
     console.error('创建团队失败:', error);
-    ElMessage.error('创建团队失败');
+    ElMessage.error(error.response?.data?.message || '创建团队失败');
   }
 };
 
@@ -215,24 +198,6 @@ const confirmCreateTeam = async () => {
 const copyInviteCode = () => {
   navigator.clipboard.writeText(selectedTeam.value.invite_code);
   ElMessage.success('邀请码已复制');
-};
-
-// 确认加入团队
-const confirmJoinTeam = async () => {
-  if (!joinForm.inviteCode) {
-    ElMessage.warning('请输入邀请码');
-    return;
-  }
-
-  try {
-    await teamApi.joinTeamByCode(joinForm.inviteCode);
-    ElMessage.success('加入团队成功');
-    showJoinDialog.value = false;
-    fetchTeams();
-  } catch (error) {
-    console.error('加入团队失败:', error);
-    ElMessage.error(error.message || '加入团队失败');
-  }
 };
 
 // 移除成员
@@ -247,19 +212,6 @@ const handleRemoveMember = async (member) => {
   }
 };
 
-// 分配项目
-const handleAssignProject = async () => {
-  if (!selectedProjectId.value) return;
-
-  try {
-    await teamApi.assignProjectToTeam(selectedProjectId.value, selectedTeam.value.id);
-    ElMessage.success('项目已分配给团队');
-  } catch (error) {
-    console.error('分配项目失败:', error);
-    ElMessage.error('分配项目失败');
-  }
-};
-
 onMounted(() => {
   fetchTeams();
 });
@@ -267,7 +219,7 @@ onMounted(() => {
 
 <style scoped>
 .team-collaboration {
-  max-width: 800px;
+  margin-top: 20px;
 }
 
 .card-header {
@@ -277,17 +229,12 @@ onMounted(() => {
 }
 
 .team-list {
-  min-height: 200px;
-}
-
-.team-cards {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
-  flex-wrap: wrap;
 }
 
 .team-card {
-  width: 280px;
   cursor: pointer;
   transition: all 0.3s;
 }
@@ -309,6 +256,12 @@ onMounted(() => {
   font-size: 12px;
   color: #909399;
   margin-top: 8px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #909399;
 }
 
 .team-detail {
@@ -341,19 +294,7 @@ onMounted(() => {
   letter-spacing: 2px;
 }
 
-.members-section,
-.projects-section {
-  margin-bottom: 20px;
-}
-
-.members-section h4,
-.projects-section h4 {
+.members-section h4 {
   margin: 0 0 12px 0;
-}
-
-.hint {
-  font-size: 12px;
-  color: #909399;
-  margin-bottom: 12px;
 }
 </style>

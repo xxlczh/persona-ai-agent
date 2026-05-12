@@ -43,6 +43,9 @@
           <div class="survey-actions">
             <el-button size="small" @click="handleExport('json')">导出JSON</el-button>
             <el-button size="small" type="primary" @click="handleExport('markdown')">导出Markdown</el-button>
+            <el-button size="small" type="warning" @click="handleFavorite">
+              {{ isFavorited ? '已收藏' : '收藏' }}
+            </el-button>
           </div>
         </div>
 
@@ -115,6 +118,7 @@ const props = defineProps({
 
 const loading = ref(false);
 const generatedSurvey = ref(null);
+const isFavorited = ref(false);
 
 const config = reactive({
   personaId: null,
@@ -160,6 +164,7 @@ const handleGenerate = async () => {
     }
 
     generatedSurvey.value = res.data;
+    isFavorited.value = false;
     ElMessage.success('问卷生成成功');
   } catch (error) {
     console.error('生成问卷失败:', error);
@@ -202,6 +207,26 @@ const handleExport = (format) => {
     a.click();
   }
   ElMessage.success('导出成功');
+};
+
+const handleFavorite = async () => {
+  if (!generatedSurvey.value?.id) {
+    ElMessage.warning('请先生成问卷');
+    return;
+  }
+  const favorites = JSON.parse(localStorage.getItem('favoriteSurveys') || '[]');
+  if (isFavorited.value) {
+    const idx = favorites.indexOf(generatedSurvey.value.id);
+    if (idx > -1) favorites.splice(idx, 1);
+    localStorage.setItem('favoriteSurveys', JSON.stringify(favorites));
+    isFavorited.value = false;
+    ElMessage.info('已取消收藏');
+  } else {
+    favorites.push(generatedSurvey.value.id);
+    localStorage.setItem('favoriteSurveys', JSON.stringify(favorites));
+    isFavorited.value = true;
+    ElMessage.success('已收藏到个人中心');
+  }
 };
 </script>
 

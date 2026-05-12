@@ -24,6 +24,10 @@ const Team = sequelize.define('Team', {
     allowNull: false,
     field: 'owner_id'
   },
+  project_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
   invite_code: {
     type: DataTypes.STRING(32),
     allowNull: true,

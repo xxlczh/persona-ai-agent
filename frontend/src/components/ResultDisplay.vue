@@ -5,8 +5,8 @@
       <div class="persona-title">
         <h2>{{ persona.name }}</h2>
         <el-tag type="success" size="large">生成成功</el-tag>
-        <el-tag v-if="persona.quality_score" :type="getQualityTagType(persona.quality_score.overall_score || persona.quality_score.overall)" size="large">
-          质量评分: {{ persona.quality_score.overall_score || persona.quality_score.overall || 'N/A' }}
+        <el-tag v-if="persona.quality_score" :type="getQualityTagType((persona.quality_score.overall_score || persona.quality_score.overall || 0) * 100)" size="large">
+          质量评分: {{ ((persona.quality_score.overall_score || persona.quality_score.overall) * 100 || 0).toFixed(0) }}
         </el-tag>
       </div>
       <div class="persona-meta">
@@ -177,8 +177,8 @@
             </template>
             <el-descriptions :column="2" border>
               <el-descriptions-item label="综合评分">
-                <el-tag :type="getQualityTagType(persona.quality_score.overall_score || persona.quality_score.overall)">
-                  {{ persona.quality_score.overall_score || persona.quality_score.overall || 'N/A' }}
+                <el-tag :type="getQualityTagType((persona.quality_score.overall_score || persona.quality_score.overall || 0) * 100)">
+                  {{ ((persona.quality_score.overall_score || persona.quality_score.overall) * 100 || 0).toFixed(0) }}
                 </el-tag>
               </el-descriptions-item>
               <el-descriptions-item label="质量等级">

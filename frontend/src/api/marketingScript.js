@@ -2,7 +2,7 @@ import request from './request';
 
 const marketingScriptApi = {
   generate(data) {
-    return request.post('/api/marketing-scripts/generate', data);
+    return request.post('/api/marketing-scripts/generate', data, { timeout: 120000 });
   },
   // 兼容组件调用的别名
   generateMarketingScript(data) {

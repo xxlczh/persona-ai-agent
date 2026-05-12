@@ -33,6 +33,10 @@ const ProductSuggestion = sequelize.define('ProductSuggestion', {
     type: DataTypes.JSON,
     allowNull: true
   },
+  confidence_score: {
+    type: DataTypes.DECIMAL(3, 2),
+    allowNull: true
+  },
   competitor_analysis: {
     type: DataTypes.JSON,
     allowNull: true

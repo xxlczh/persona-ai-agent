@@ -22,15 +22,20 @@ const Project = sequelize.define('Project', {
   owner_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    field: 'user_id',
-    references: {
-      model: 'users',
-      key: 'id'
-    }
+    field: 'user_id'
+  },
+  owner_name: {
+    type: DataTypes.STRING(100),
+    allowNull: true
   },
   status: {
     type: DataTypes.ENUM('active', 'archived', 'deleted'),
     defaultValue: 'active'
+  },
+  invite_code: {
+    type: DataTypes.STRING(32),
+    allowNull: true,
+    unique: true
   },
   settings: {
     type: DataTypes.JSON,
@@ -50,7 +55,8 @@ const Project = sequelize.define('Project', {
     { fields: ['owner_id'] },
     { fields: ['status'] },
     { fields: ['created_at'] },
-    { fields: ['owner_id', 'status'] }
+    { fields: ['owner_id', 'status'] },
+    { fields: ['invite_code'] }
   ]
 });
 
