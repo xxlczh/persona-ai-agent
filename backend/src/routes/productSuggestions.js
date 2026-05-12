@@ -24,7 +24,7 @@ router.post('/generate', authenticate, async (req, res) => {
       userId
     });
 
-    success(res, report, '产品建议报告生成成功');
+    success(res, report.toJSON ? report.toJSON() : report, '产品建议报告生成成功');
   } catch (error) {
     console.error('生成产品建议失败:', error);
     res.status(500).json({ success: false, message: error.message });

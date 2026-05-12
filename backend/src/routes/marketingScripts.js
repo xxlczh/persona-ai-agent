@@ -24,7 +24,7 @@ router.post('/generate', authenticate, async (req, res) => {
       userId
     });
 
-    success(res, script, '营销脚本生成成功');
+    success(res, script.toJSON ? script.toJSON() : script, '营销脚本生成成功');
   } catch (error) {
     console.error('生成营销脚本失败:', error);
     res.status(500).json({ success: false, message: error.message });

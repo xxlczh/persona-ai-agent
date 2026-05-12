@@ -24,7 +24,7 @@ router.post('/generate', authenticate, async (req, res) => {
       userId
     });
 
-    success(res, survey, '问卷生成成功');
+    success(res, survey.toJSON ? survey.toJSON() : survey, '问卷生成成功');
   } catch (error) {
     console.error('生成问卷失败:', error);
     res.status(500).json({ success: false, message: error.message });
