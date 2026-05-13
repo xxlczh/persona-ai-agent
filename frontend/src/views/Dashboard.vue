@@ -29,6 +29,18 @@
               <el-icon><User /></el-icon>
               <span>个人中心</span>
             </el-menu-item>
+            <el-menu-item index="/gallery">
+              <el-icon><Collection /></el-icon>
+              <span>作品广场</span>
+            </el-menu-item>
+            <el-menu-item index="/my-shares">
+              <el-icon><Share /></el-icon>
+              <span>我的分享</span>
+            </el-menu-item>
+            <el-menu-item index="/favorites">
+              <el-icon><Star /></el-icon>
+              <span>我的收藏</span>
+            </el-menu-item>
           </el-menu>
         </el-aside>
         <el-main>
@@ -143,7 +155,10 @@ import {
   WarningFilled,
   Plus,
   Upload,
-  Document
+  Document,
+  Collection,
+  Share,
+  Star
 } from '@element-plus/icons-vue'
 
 const router = useRouter()

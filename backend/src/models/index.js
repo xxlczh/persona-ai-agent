@@ -12,6 +12,7 @@ const MarketingScript = require('./MarketingScript');
 const ProductSuggestion = require('./ProductSuggestion');
 
 const ProjectMember = require('./ProjectMember');
+const Share = require('./Share');
 
 // 建立关联关系
 User.hasMany(Project, { foreignKey: 'owner_id', as: 'projects' });
@@ -81,11 +82,16 @@ ProductSuggestion.belongsTo(Project, { foreignKey: 'project_id', as: 'project' }
 ProductSuggestion.belongsTo(Persona, { foreignKey: 'persona_id', as: 'persona' });
 ProductSuggestion.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
+// Share 关联（作品广场分享）
+User.hasMany(Share, { foreignKey: 'user_id', as: 'shares' });
+Share.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
+
 module.exports = {
   sequelize,
   User,
   Project,
   ProjectMember,
+  Share,
   DataSource,
   Persona,
   Evaluation,

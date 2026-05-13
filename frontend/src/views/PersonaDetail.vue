@@ -21,6 +21,10 @@
               <el-icon><Delete /></el-icon>
               删除
             </el-button>
+            <el-button :type="isShared ? 'success' : 'warning'" @click="handleShare">
+              <el-icon><Share /></el-icon>
+              {{ isShared ? '已分享' : '分享到广场' }}
+            </el-button>
           </div>
         </div>
       </el-header>
@@ -293,8 +297,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Back, Download, Edit, Delete } from '@element-plus/icons-vue'
+import { Back, Download, Edit, Delete, Share } from '@element-plus/icons-vue'
 import { personaApi } from '@/api'
+import request from '@/api/request'
 import PersonaEditor from '@/components/PersonaEditor.vue'
 import PersonaExport from '@/components/PersonaExport.vue'
 
@@ -309,6 +314,7 @@ const activeTab = ref('summary')
 const showRaw = ref(false)
 const showEditDialog = ref(false)
 const showExportDialog = ref(false)
+const isShared = ref(false)
 
 // 画像 ID
 const personaId = computed(() => {
@@ -428,9 +434,49 @@ const handleDelete = async () => {
   }
 }
 
+// 检查分享状态
+const checkShareStatus = async () => {
+  try {
+    const res = await request.get(`/api/shares/check/persona/${personaId.value}`)
+    isShared.value = res.data?.shared || false
+  } catch (error) {
+    console.error('检查分享状态失败:', error)
+  }
+}
+
+// 分享/取消分享
+const handleShare = async () => {
+  try {
+    if (isShared.value) {
+      // 取消分享
+      await ElMessageBox.confirm('确定要取消分享吗？取消后将从作品广场移除。', '确认取消', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+      await request.delete(`/api/shares/persona/${personaId.value}`)
+      ElMessage.success('已取消分享')
+      isShared.value = false
+    } else {
+      // 分享到广场
+      await request.post('/api/shares', {
+        resource_type: 'persona',
+        resource_id: personaId.value
+      })
+      ElMessage.success('已分享到作品广场')
+      isShared.value = true
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(isShared.value ? '取消分享失败' : '分享失败')
+    }
+  }
+}
+
 // 页面加载时获取数据
 onMounted(() => {
   loadPersona()
+  checkShareStatus()
 })
 </script>
 

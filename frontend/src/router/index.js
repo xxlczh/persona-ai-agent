@@ -44,6 +44,16 @@ const routes = [
     path: '/favorites',
     name: 'Favorites',
     component: () => import('../views/Favorites.vue')
+  },
+  {
+    path: '/gallery',
+    name: 'Gallery',
+    component: () => import('../views/Gallery.vue')
+  },
+  {
+    path: '/my-shares',
+    name: 'MyShares',
+    component: () => import('../views/MyShares.vue')
   }
 ]
 

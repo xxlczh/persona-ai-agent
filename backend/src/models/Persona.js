@@ -92,6 +92,14 @@ const Persona = sequelize.define('Persona', {
     type: DataTypes.STRING(50),
     allowNull: true,
     defaultValue: 'auto'
+  },
+  created_by: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'users',
+      key: 'id'
+    }
   }
 }, {
   tableName: 'personas',

@@ -34,6 +34,10 @@ app.use('/api/marketing-scripts', require('./routes/marketingScripts'));
 app.use('/api/product-suggestions', require('./routes/productSuggestions'));
 app.use('/api/teams', require('./routes/teams'));
 
+// 作品广场路由
+app.use('/api/shares', require('./routes/shares'));
+app.use('/api/gallery', require('./routes/gallery'));
+
 // Error logging middleware
 app.use(errorLogger);
 
