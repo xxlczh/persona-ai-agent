@@ -29,20 +29,34 @@
                 :initial-input="naturalLanguageInput"
                 @generated="handlePersonaGenerated"
               />
-              <!-- 精准/混合模式使用原有生成器 -->
+              <!-- 精准模式使用 PreciseModeGenerator -->
+              <PreciseModeGenerator
+                v-else-if="projectId && projectMode === 'precise'"
+                :project-id="projectId"
+                @generated="handlePersonaGenerated"
+              />
+              <!-- 混合迭代模式使用 HybridModeGenerator -->
+              <HybridModeGenerator
+                v-else-if="projectId && projectMode === 'hybrid'"
+                :project-id="projectId"
+                @generated="handlePersonaGenerated"
+              />
+              <!-- 兜底：原有生成器 -->
               <template v-else>
                 <PersonaGenerator
                   v-if="projectId"
                   :project-id="projectId"
                   @generated="handlePersonaGenerated"
                 />
-                <BatchGenerator
-                  v-if="projectId"
-                  :project-id="projectId"
-                  @generated="handleBatchGenerated"
-                  @view="handleViewPersona"
-                />
               </template>
+
+              <!-- 批量生成（仅精准和混合模式显示） -->
+              <BatchGenerator
+                v-if="projectId && projectMode !== 'simple'"
+                :project-id="projectId"
+                @generated="handleBatchGenerated"
+                @view="handleViewPersona"
+              />
             </div>
           </el-tab-pane>
 
@@ -114,6 +128,8 @@ import { useRouter, useRoute } from 'vue-router'
 import DataSourceManager from '@/components/DataSourceManager.vue'
 import PersonaGenerator from '@/components/PersonaGenerator.vue'
 import SimpleModeGenerator from '@/components/SimpleModeGenerator.vue'
+import PreciseModeGenerator from '@/components/PreciseModeGenerator.vue'
+import HybridModeGenerator from '@/components/HybridModeGenerator.vue'
 import BatchGenerator from '@/components/BatchGenerator.vue'
 import EvaluationDashboard from '@/components/EvaluationDashboard.vue'
 import PersonaHistory from '@/components/PersonaHistory.vue'
