@@ -84,14 +84,6 @@
           </div>
         </div>
 
-        <el-form-item label="生成数量">
-          <el-radio-group v-model="formData.count">
-            <el-radio :label="1">单个画像</el-radio>
-            <el-radio :label="3">3个画像</el-radio>
-            <el-radio :label="5">5个画像</el-radio>
-          </el-radio-group>
-        </el-form-item>
-
         <el-form-item>
           <el-button
             type="primary"
@@ -202,8 +194,7 @@ const emit = defineEmits(['generated'])
 const formData = ref({
   industry: '',
   productDescription: '',
-  naturalLanguageInput: '',
-  count: 1
+  naturalLanguageInput: ''
 })
 
 const iterationForm = reactive({
@@ -286,8 +277,7 @@ const startGeneration = async () => {
         projectId: props.projectId,
         industry: formData.value.industry,
         productDescription: formData.value.productDescription,
-        naturalLanguageInput: formData.value.naturalLanguageInput,
-        count: formData.value.count
+        naturalLanguageInput: formData.value.naturalLanguageInput
       })
     }
 
@@ -333,8 +323,7 @@ const startIteration = async () => {
       projectId: props.projectId,
       industry: formData.value.industry,
       productDescription: formData.value.productDescription,
-      naturalLanguageInput: `${formData.value.naturalLanguageInput}\n\n用户反馈：${iterationForm.feedback}`,
-      count: 1
+      naturalLanguageInput: `${formData.value.naturalLanguageInput}\n\n用户反馈：${iterationForm.feedback}`
     })
 
     if (res.success) {

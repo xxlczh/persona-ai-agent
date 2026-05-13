@@ -56,14 +56,6 @@
           />
         </el-form-item>
 
-        <el-form-item label="生成数量">
-          <el-radio-group v-model="formData.count">
-            <el-radio :label="1">单个画像</el-radio>
-            <el-radio :label="3">3个画像</el-radio>
-            <el-radio :label="5">5个画像</el-radio>
-          </el-radio-group>
-        </el-form-item>
-
         <el-form-item>
           <el-button
             type="primary"
@@ -197,8 +189,7 @@ const startGeneration = async () => {
       projectId: props.projectId,
       industry: formData.value.industry,
       productDescription: formData.value.productDescription,
-      naturalLanguageInput: formData.value.naturalLanguageInput,
-      count: formData.value.count
+      naturalLanguageInput: formData.value.naturalLanguageInput
     })
 
     if (res.success) {

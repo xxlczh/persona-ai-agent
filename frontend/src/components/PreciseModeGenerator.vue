@@ -62,14 +62,6 @@
           </div>
         </div>
 
-        <el-form-item label="生成数量">
-          <el-radio-group v-model="formData.count">
-            <el-radio :label="1">单个画像</el-radio>
-            <el-radio :label="3">3个画像</el-radio>
-            <el-radio :label="5">5个画像</el-radio>
-          </el-radio-group>
-        </el-form-item>
-
         <el-form-item>
           <el-button
             type="primary"
@@ -145,8 +137,7 @@ const emit = defineEmits(['generated'])
 
 const formData = ref({
   industry: '',
-  naturalLanguageInput: '',
-  count: 1
+  naturalLanguageInput: ''
 })
 
 const generating = ref(false)
