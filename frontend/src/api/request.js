@@ -35,7 +35,10 @@ request.interceptors.response.use(
       if (!data.success) {
         // 显示错误消息
         ElMessage.error(data.message || '请求失败');
-        return Promise.reject(new Error(data.message || '请求失败'));
+        // 创建一个带有 response 属性的错误，以便 catch 处理
+        const err = new Error(data.message || '请求失败');
+        err.response = response;
+        return Promise.reject(err);
       }
     }
 
