@@ -94,16 +94,33 @@
         <div class="dimension-content">
           <el-descriptions :column="1" border>
             <el-descriptions-item label="价值观" v-if="persona.psychological.values">
-              {{ persona.psychological.values }}
+              <template v-if="typeof persona.psychological.values === 'object'">
+                <div class="values-grid">
+                  <div v-for="(value, key) in persona.psychological.values" :key="key" class="value-item">
+                    <span class="value-label">{{ getValueLabel(key) }}</span>
+                    <el-rate :model-value="value" disabled text-color="#ff9900" />
+                  </div>
+                </div>
+              </template>
+              <template v-else>{{ persona.psychological.values }}</template>
             </el-descriptions-item>
             <el-descriptions-item label="动机" v-if="persona.psychological.motivation">
-              {{ persona.psychological.motivation }}
+              <template v-if="Array.isArray(persona.psychological.motivation)">
+                <el-tag v-for="(m, i) in persona.psychological.motivation" :key="i" class="mr-2">{{ m }}</el-tag>
+              </template>
+              <template v-else>{{ persona.psychological.motivation }}</template>
             </el-descriptions-item>
             <el-descriptions-item label="痛点" v-if="persona.psychological.pain_points">
-              {{ persona.psychological.pain_points }}
+              <template v-if="Array.isArray(persona.psychological.pain_points)">
+                <el-tag v-for="(p, i) in persona.psychological.pain_points" :key="i" type="danger" class="mr-2">{{ p }}</el-tag>
+              </template>
+              <template v-else>{{ persona.psychological.pain_points }}</template>
             </el-descriptions-item>
             <el-descriptions-item label="追求/愿望" v-if="persona.psychological.aspirations">
-              {{ persona.psychological.aspirations }}
+              <template v-if="Array.isArray(persona.psychological.aspirations)">
+                <el-tag v-for="(a, i) in persona.psychological.aspirations" :key="i" type="warning" class="mr-2">{{ a }}</el-tag>
+              </template>
+              <template v-else>{{ persona.psychological.aspirations }}</template>
             </el-descriptions-item>
           </el-descriptions>
         </div>
@@ -386,6 +403,16 @@ const getQualityTagType = (score) => {
   return 'danger'
 }
 
+const getValueLabel = (key) => {
+  const labels = {
+    trend_pursuit: '追求潮流',
+    value_pursuit: '追求性价比',
+    quality_pursuit: '追求品质',
+    practical_pursuit: '追求实用'
+  }
+  return labels[key] || key
+}
+
 const getLevelTagType = (level) => {
   const map = { excellent: 'success', good: '', fair: 'warning', poor: 'danger' }
   return map[level] || ''
@@ -645,5 +672,26 @@ const handleNew = () => {
   gap: 12px;
   padding-top: 16px;
   border-top: 1px solid #ebeef5;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.value-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.value-label {
+  width: 100px;
+  font-size: 13px;
+}
+
+.mr-2 {
+  margin-right: 8px;
 }
 </style>
