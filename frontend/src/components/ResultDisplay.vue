@@ -5,8 +5,8 @@
       <div class="persona-title">
         <h2>{{ persona.name }}</h2>
         <el-tag type="success" size="large">生成成功</el-tag>
-        <el-tag v-if="persona.quality_score" :type="getQualityTagType((persona.quality_score.overall_score || persona.quality_score.overall || 0) * 100)" size="large">
-          质量评分: {{ ((persona.quality_score.overall_score || persona.quality_score.overall) * 100 || 0).toFixed(0) }}
+        <el-tag v-if="persona.quality_score" :type="getQualityTagType(getScoreValue(persona.quality_score.overall_score || persona.quality_score.overall))" size="large">
+          质量评分: {{ getScoreValue(persona.quality_score.overall_score || persona.quality_score.overall) }}
         </el-tag>
       </div>
       <div class="persona-meta">
@@ -441,6 +441,15 @@ const getQualityTagType = (score) => {
   if (score >= 75) return ''
   if (score >= 60) return 'warning'
   return 'danger'
+}
+
+// 获取评分值，如果是小数（0-1之间）则乘100转为百分制
+const getScoreValue = (score) => {
+  if (score === null || score === undefined) return 0
+  // 如果评分大于1，说明已经是百分制
+  if (score > 1) return score.toFixed(0)
+  // 如果评分是0-1之间的小数，转为百分制
+  return (score * 100).toFixed(0)
 }
 
 const getValueLabel = (key) => {
