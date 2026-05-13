@@ -263,7 +263,7 @@ watch(dialogVisible, (val) => {
 
 // 初始化表单数据
 const initFormData = () => {
-  const p = props.persona
+  const p = props.persona || {}
   formData.name = p.name || ''
   formData.summary = p.summary || ''
   formData.demographic = {

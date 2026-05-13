@@ -148,7 +148,7 @@
     <!-- 编辑对话框 -->
     <PersonaEditor
       v-model="showEditDialog"
-      :persona="editingPersona"
+      :persona="editingPersona || {}"
       @save="handleSave"
     />
   </div>
