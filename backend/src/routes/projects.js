@@ -287,7 +287,15 @@ router.put('/:id', authenticate, [
  */
 router.delete('/:id', authenticate, async (req, res) => {
   try {
-    const project = await Project.findByPk(req.params.id);
+    const projectId = parseInt(req.params.id);
+    if (isNaN(projectId)) {
+      return res.status(400).json({
+        success: false,
+        message: '无效的项目ID'
+      });
+    }
+
+    const project = await Project.findByPk(projectId);
 
     if (!project) {
       return res.status(404).json({
@@ -316,7 +324,7 @@ router.delete('/:id', authenticate, async (req, res) => {
     console.error('Delete project error:', error);
     res.status(500).json({
       success: false,
-      message: '删除项目失败'
+      message: '删除项目失败: ' + error.message
     });
   }
 });
@@ -326,7 +334,15 @@ router.delete('/:id', authenticate, async (req, res) => {
  */
 router.post('/:id/archive', authenticate, async (req, res) => {
   try {
-    const project = await Project.findByPk(req.params.id);
+    const projectId = parseInt(req.params.id);
+    if (isNaN(projectId)) {
+      return res.status(400).json({
+        success: false,
+        message: '无效的项目ID'
+      });
+    }
+
+    const project = await Project.findByPk(projectId);
 
     if (!project) {
       return res.status(404).json({
@@ -355,7 +371,54 @@ router.post('/:id/archive', authenticate, async (req, res) => {
     console.error('Archive project error:', error);
     res.status(500).json({
       success: false,
-      message: '归档项目失败'
+      message: '归档项目失败: ' + error.message
+    });
+  }
+});
+
+/**
+ * POST /api/projects/:id/unarchive - 解除归档
+ */
+router.post('/:id/unarchive', authenticate, async (req, res) => {
+  try {
+    const projectId = parseInt(req.params.id);
+    if (isNaN(projectId)) {
+      return res.status(400).json({
+        success: false,
+        message: '无效的项目ID'
+      });
+    }
+
+    const project = await Project.findByPk(projectId);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: '项目不存在'
+      });
+    }
+
+    // 检查权限：只有项目所有者或管理员可以解除归档
+    if (project.owner_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: '没有权限解除归档此项目'
+      });
+    }
+
+    project.status = 'active';
+    await project.save();
+
+    res.json({
+      success: true,
+      message: '项目已解除归档',
+      data: { project }
+    });
+  } catch (error) {
+    console.error('Unarchive project error:', error);
+    res.status(500).json({
+      success: false,
+      message: '解除归档失败: ' + error.message
     });
   }
 });

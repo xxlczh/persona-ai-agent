@@ -16,7 +16,11 @@
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="archive">
+                  <el-dropdown-item v-if="projectStatus === 'archived'" command="unarchive">
+                    <el-icon><Unlock /></el-icon>
+                    解除归档
+                  </el-dropdown-item>
+                  <el-dropdown-item v-else command="archive">
                     <el-icon><Box /></el-icon>
                     归档项目
                   </el-dropdown-item>
@@ -148,7 +152,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowDown, Box, Delete } from '@element-plus/icons-vue'
+import { ArrowDown, Box, Delete, Unlock } from '@element-plus/icons-vue'
 import DataSourceManager from '@/components/DataSourceManager.vue'
 import PersonaGenerator from '@/components/PersonaGenerator.vue'
 import SimpleModeGenerator from '@/components/SimpleModeGenerator.vue'
@@ -171,6 +175,7 @@ const activeTab = ref('sources')
 const extensionTab = ref('survey')
 const personas = ref([])
 const projectMode = ref('')
+const projectStatus = ref('')
 const naturalLanguageInput = ref('')
 const currentUserId = ref(null)
 const projectOwnerId = ref(null)
@@ -201,6 +206,21 @@ const handleProjectCommand = async (command) => {
         ElMessage.error('归档失败')
       }
     }
+  } else if (command === 'unarchive') {
+    try {
+      await ElMessageBox.confirm('解除归档后项目团队成员可以继续操作。', '确认解除归档', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+      await request.post(`/api/projects/${projectId.value}/unarchive`)
+      ElMessage.success('项目已解除归档')
+      fetchProjectDetail()
+    } catch (error) {
+      if (error !== 'cancel') {
+        ElMessage.error('解除归档失败')
+      }
+    }
   } else if (command === 'delete') {
     try {
       await ElMessageBox.confirm('删除后项目所有数据将无法恢复！', '确认删除', {
@@ -226,6 +246,7 @@ const fetchProjectDetail = async () => {
     const res = await request.get(`/api/projects/${projectId.value}`)
     if (res.data?.project) {
       projectMode.value = res.data.project.settings?.mode || 'precise'
+      projectStatus.value = res.data.project.status || 'active'
       naturalLanguageInput.value = res.data.project.settings?.naturalLanguageInput || ''
       projectOwnerId.value = res.data.project.owner_id
       // 极简模式默认跳到画像生成
