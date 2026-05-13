@@ -109,6 +109,13 @@
         @new="resetGenerator"
       />
     </div>
+
+    <!-- 编辑对话框 -->
+    <PersonaEditor
+      v-model="showEditDialog"
+      :persona="editingPersona"
+      @save="handleSave"
+    />
   </div>
 </template>
 
@@ -116,6 +123,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import ResultDisplay from './ResultDisplay.vue'
+import PersonaEditor from './PersonaEditor.vue'
 import { personaApi } from '@/api'
 
 const props = defineProps({
@@ -144,6 +152,10 @@ const progressStatus = ref()
 const currentLog = ref('正在初始化...')
 const logs = ref([])
 const generatedPersona = ref(null)
+
+// 编辑对话框状态
+const showEditDialog = ref(false)
+const editingPersona = ref(null)
 
 onMounted(() => {
   if (props.initialInput) {
@@ -219,8 +231,25 @@ const handleExport = () => {
   ElMessage.success('导出成功')
 }
 
-const handleEdit = () => {
-  ElMessage.info('编辑功能开发中')
+const handleEdit = (persona) => {
+  editingPersona.value = persona
+  showEditDialog.value = true
+}
+
+// 保存编辑
+const handleSave = async (data) => {
+  try {
+    const res = await personaApi.update(editingPersona.value.id, data)
+    if (res.success) {
+      ElMessage.success('保存成功')
+      generatedPersona.value = res.data
+      showEditDialog.value = false
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (err) {
+    ElMessage.error('保存失败')
+  }
 }
 
 const handleDelete = async (id) => {

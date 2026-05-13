@@ -79,6 +79,13 @@
         </div>
       </div>
     </div>
+
+    <!-- 编辑对话框 -->
+    <PersonaEditor
+      v-model="showEditDialog"
+      :persona="editingPersona"
+      @save="handleSave"
+    />
   </div>
 </template>
 
@@ -89,6 +96,7 @@ import DataSelector from './DataSelector.vue'
 import PromptConfig from './PromptConfig.vue'
 import GenerationProgress from './GenerationProgress.vue'
 import ResultDisplay from './ResultDisplay.vue'
+import PersonaEditor from './PersonaEditor.vue'
 import { personaApi } from '@/api'
 
 const props = defineProps({
@@ -128,6 +136,10 @@ const generationStep = ref(0)
 const generationLogs = ref([])
 const errorMessage = ref('')
 const generatedPersona = ref(null)
+
+// 编辑对话框状态
+const showEditDialog = ref(false)
+const editingPersona = ref(null)
 
 // 跳转到指定步骤
 const goToStep = (step) => {
@@ -270,7 +282,24 @@ const handleExport = () => {
 
 // 编辑
 const handleEdit = (persona) => {
-  ElMessage.info('编辑功能开发中')
+  editingPersona.value = persona
+  showEditDialog.value = true
+}
+
+// 保存编辑
+const handleSave = async (data) => {
+  try {
+    const res = await personaApi.update(editingPersona.value.id, data)
+    if (res.success) {
+      ElMessage.success('保存成功')
+      generatedPersona.value = res.data
+      showEditDialog.value = false
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (err) {
+    ElMessage.error('保存失败')
+  }
 }
 
 // 删除
