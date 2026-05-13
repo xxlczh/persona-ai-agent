@@ -70,46 +70,26 @@
       <el-tab-pane label="行为特征" name="behavioral" v-if="persona.behavioral">
         <div class="dimension-content">
           <el-descriptions :column="2" border>
-            <el-descriptions-item label="浏览时长" v-if="persona.behavioral.browse_time">
-              {{ persona.behavioral.browse_time }}
+            <el-descriptions-item label="消费习惯" v-if="persona.behavioral.shopping_habit">
+              {{ persona.behavioral.shopping_habit }}
             </el-descriptions-item>
-            <el-descriptions-item label="品牌忠诚度" v-if="persona.behavioral.brand_loyalty !== undefined">
-              <template v-if="typeof persona.behavioral.brand_loyalty === 'number'">
+            <el-descriptions-item label="线上偏好" v-if="persona.behavioral.online_preference">
+              {{ persona.behavioral.online_preference }}
+            </el-descriptions-item>
+            <el-descriptions-item label="品牌忠诚度" v-if="persona.behavioral.brand_loyalty">
+              <template v-if="typeof persona.behavioral.brand_loyalty === 'number' && persona.behavioral.brand_loyalty <= 5">
                 <el-rate :model-value="persona.behavioral.brand_loyalty" disabled text-color="#ff9900" />
               </template>
               <template v-else>{{ persona.behavioral.brand_loyalty }}</template>
             </el-descriptions-item>
-            <el-descriptions-item label="决策周期" v-if="persona.behavioral.decision_cycle">
-              {{ persona.behavioral.decision_cycle }}
-            </el-descriptions-item>
-            <el-descriptions-item label="购买频率" v-if="persona.behavioral.purchase_frequency">
-              {{ persona.behavioral.purchase_frequency }}
-            </el-descriptions-item>
-            <el-descriptions-item label="平均订单金额" v-if="persona.behavioral.average_order_value">
-              {{ persona.behavioral.average_order_value }}
-            </el-descriptions-item>
-            <el-descriptions-item label="促销敏感度" v-if="persona.behavioral.promotion_sensitivity !== undefined">
-              <template v-if="typeof persona.behavioral.promotion_sensitivity === 'number'">
-                <el-rate :model-value="persona.behavioral.promotion_sensitivity" disabled text-color="#ff9900" />
+            <el-descriptions-item label="价格敏感度" v-if="persona.behavioral.price_sensitivity">
+              <template v-if="typeof persona.behavioral.price_sensitivity === 'number' && persona.behavioral.price_sensitivity <= 5">
+                <el-rate :model-value="persona.behavioral.price_sensitivity" disabled text-color="#ff9900" />
               </template>
-              <template v-else>{{ persona.behavioral.promotion_sensitivity }}</template>
+              <template v-else>{{ persona.behavioral.price_sensitivity }}</template>
             </el-descriptions-item>
-            <el-descriptions-item label="搜索关键词" v-if="persona.behavioral.search_keywords && persona.behavioral.search_keywords.length" :span="2">
-              <el-tag v-for="(kw, i) in persona.behavioral.search_keywords" :key="i" class="mr-2">{{ kw }}</el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="渠道偏好" v-if="persona.behavioral.channel_preference && persona.behavioral.channel_preference.length" :span="2">
-              <el-tag v-for="(cp, i) in persona.behavioral.channel_preference" :key="i" type="success" class="mr-2">{{ cp }}</el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="品类偏好" v-if="persona.behavioral.category_preference && persona.behavioral.category_preference.length" :span="2">
-              <el-tag v-for="(cp, i) in persona.behavioral.category_preference" :key="i" type="warning" class="mr-2">{{ cp }}</el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item v-if="persona.behavioral.engagement_behavior" label="互动行为" :span="2">
-              <div class="engagement-grid">
-                <span>点赞: {{ persona.behavioral.engagement_behavior.likes || '无数据' }}</span>
-                <span>分享: {{ persona.behavioral.engagement_behavior.shares || '无数据' }}</span>
-                <span>评论: {{ persona.behavioral.engagement_behavior.comments || '无数据' }}</span>
-                <span>收藏: {{ persona.behavioral.engagement_behavior.favorites || '无数据' }}</span>
-              </div>
+            <el-descriptions-item label="决策因素" v-if="persona.behavioral.decision_factor" :span="2">
+              {{ persona.behavioral.decision_factor }}
             </el-descriptions-item>
           </el-descriptions>
         </div>
@@ -124,7 +104,8 @@
                 <div class="values-grid">
                   <div v-for="(value, key) in persona.psychological.values" :key="key" class="value-item">
                     <span class="value-label">{{ getValueLabel(key) }}</span>
-                    <el-rate :model-value="value" disabled text-color="#ff9900" />
+                    <el-rate v-if="typeof value === 'number' && value <= 5" :model-value="value" disabled text-color="#ff9900" />
+                    <span v-else>{{ value }}</span>
                   </div>
                 </div>
               </template>
@@ -155,53 +136,33 @@
       <!-- 需求分析 -->
       <el-tab-pane label="需求分析" name="needs" v-if="persona.needs">
         <div class="dimension-content">
-          <el-card v-if="persona.needs.pain_points && persona.needs.pain_points.length" shadow="hover">
+          <el-card v-if="persona.needs.main_need" shadow="hover">
             <template #header>
               <div class="card-header">
-                <span>痛点</span>
+                <span>核心需求</span>
+              </div>
+            </template>
+            <div class="needs-text">{{ persona.needs.main_need }}</div>
+          </el-card>
+          <el-card v-if="persona.needs.sub_needs && persona.needs.sub_needs.length" shadow="hover">
+            <template #header>
+              <div class="card-header">
+                <span>子需求</span>
               </div>
             </template>
             <div class="needs-list">
-              <el-tag v-for="(p, i) in persona.needs.pain_points" :key="i" type="danger" class="mr-2">{{ p }}</el-tag>
+              <el-tag v-for="(need, index) in persona.needs.sub_needs" :key="index" type="primary" effect="plain" class="need-item">
+                {{ need }}
+              </el-tag>
             </div>
           </el-card>
-          <el-card v-if="persona.needs.expectations && persona.needs.expectations.length" shadow="hover">
+          <el-card v-if="persona.needs.unmet_needs" shadow="hover">
             <template #header>
               <div class="card-header">
-                <span>期望</span>
+                <span>未满足需求</span>
               </div>
             </template>
-            <div class="needs-list">
-              <el-tag v-for="(e, i) in persona.needs.expectations" :key="i" type="success" class="mr-2">{{ e }}</el-tag>
-            </div>
-          </el-card>
-          <el-card v-if="persona.needs.emotional_needs && persona.needs.emotional_needs.length" shadow="hover">
-            <template #header>
-              <div class="card-header">
-                <span>情感需求</span>
-              </div>
-            </template>
-            <div class="needs-list">
-              <el-tag v-for="(n, i) in persona.needs.emotional_needs" :key="i" type="warning" class="mr-2">{{ n }}</el-tag>
-            </div>
-          </el-card>
-          <el-card v-if="persona.needs.functional_needs && persona.needs.functional_needs.length" shadow="hover">
-            <template #header>
-              <div class="card-header">
-                <span>功能需求</span>
-              </div>
-            </template>
-            <div class="needs-list">
-              <el-tag v-for="(n, i) in persona.needs.functional_needs" :key="i" type="info" class="mr-2">{{ n }}</el-tag>
-            </div>
-          </el-card>
-          <el-card v-if="persona.needs.price_sensitivity !== undefined" shadow="hover">
-            <template #header>
-              <div class="card-header">
-                <span>价格敏感度</span>
-              </div>
-            </template>
-            <el-rate :model-value="persona.needs.price_sensitivity" disabled text-color="#ff9900" />
+            <div class="needs-text">{{ persona.needs.unmet_needs }}</div>
           </el-card>
         </div>
       </el-tab-pane>
