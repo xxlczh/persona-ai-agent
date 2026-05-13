@@ -19,17 +19,17 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    // 对文件名进行解码处理，确保中文正确显示
+    // 浏览器发送的文件名是URL编码的，需要解码后存储
     let originalName = file.originalname;
-    // 尝试解码URL编码的中文文件名
+    // 解码URL编码的中文文件名
     try {
       originalName = decodeURIComponent(originalName);
     } catch (e) {
-      // 解码失败，使用原始文件名
+      // 解码失败，保持原样
     }
-    // 清理文件名，移除非安全字符
-    const fileName = originalName.replace(/[<>:"|?*\x00-\x1F]/g, '_');
-    cb(null, uniqueSuffix + '-' + fileName);
+    // 清理文件名：移除非ASCII字符和控制字符
+    const cleanName = originalName.replace(/[^a-zA-Z0-9._一-龥-]/g, '_');
+    cb(null, uniqueSuffix + '-' + cleanName);
   }
 });
 
