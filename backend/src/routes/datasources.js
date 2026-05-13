@@ -19,7 +19,10 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    // 对原始文件名进行解码再编码，确保中文正确显示
+    const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    const fileName = originalName.replace(/[^a-zA-Z0-9.一-龥]/g, '_');
+    cb(null, uniqueSuffix + '-' + fileName);
   }
 });
 
@@ -106,13 +109,17 @@ router.post('/', authenticate, upload.single('file'), [
       xml: 'xml'
     };
 
+    // 对文件名进行正确编解码，确保中文正确存储
+    const originalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8');
+    const displayName = name || originalName.replace(/\.[^.]+$/, ''); // 使用文件名（不含扩展名）作为默认名称
+
     // 创建数据源记录
     const dataSource = await DataSource.create({
       project_id: parseInt(project_id),
-      name: name || req.file.originalname,
+      name: displayName,
       type: typeMap[ext] || 'txt',
       file_path: req.file.path,
-      original_name: req.file.originalname,
+      original_name: originalName,
       file_size: req.file.size,
       mime_type: req.file.mimetype,
       status: 'pending',

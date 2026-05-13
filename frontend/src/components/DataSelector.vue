@@ -99,8 +99,8 @@ const loadDataSources = async () => {
       limit: 100
     })
     if (res.success) {
-      // 只显示已完成处理的数据源
-      dataSources.value = res.data.dataSources.filter(ds => ds.status === 'completed')
+      // 显示所有非失败状态的数据源（包括 pending 和 completed）
+      dataSources.value = res.data.dataSources.filter(ds => ds.status !== 'failed')
     }
   } catch (error) {
     ElMessage.error('加载数据源列表失败')

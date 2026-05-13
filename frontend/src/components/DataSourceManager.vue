@@ -51,7 +51,7 @@
       </el-table-column>
       <el-table-column prop="created_at" label="上传时间" width="180">
         <template #default="{ row }">
-          {{ formatDate(row.created_at) }}
+          {{ formatDate(row.created_at) || formatDate(row.updated_at) || '-' }}
         </template>
       </el-table-column>
       <el-table-column label="操作" width="120" fixed="right">
