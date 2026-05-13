@@ -8,6 +8,26 @@
           <el-tag v-if="projectMode" :type="getModeTagType(projectMode)">
             {{ getModeText(projectMode) }}
           </el-tag>
+          <div class="header-actions" v-if="isOwner">
+            <el-dropdown @command="handleProjectCommand" trigger="click">
+              <el-button type="primary" plain>
+                项目管理
+                <el-icon class="el-icon--right"><arrow-down /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="archive">
+                    <el-icon><Box /></el-icon>
+                    归档项目
+                  </el-dropdown-item>
+                  <el-dropdown-item command="delete" style="color: #f56c6c;">
+                    <el-icon><Delete /></el-icon>
+                    删除项目
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </div>
       </el-header>
       <el-main>
@@ -127,6 +147,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowDown, Box, Delete } from '@element-plus/icons-vue'
 import DataSourceManager from '@/components/DataSourceManager.vue'
 import PersonaGenerator from '@/components/PersonaGenerator.vue'
 import SimpleModeGenerator from '@/components/SimpleModeGenerator.vue'
@@ -150,10 +172,52 @@ const extensionTab = ref('survey')
 const personas = ref([])
 const projectMode = ref('')
 const naturalLanguageInput = ref('')
+const currentUserId = ref(null)
+const projectOwnerId = ref(null)
 
 const projectId = computed(() => {
   return parseInt(route.params.id) || null
 })
+
+const isOwner = computed(() => {
+  // 检查当前用户是否是项目所有者
+  return currentUserId.value && projectOwnerId.value && currentUserId.value === projectOwnerId.value
+})
+
+// 处理项目操作命令
+const handleProjectCommand = async (command) => {
+  if (command === 'archive') {
+    try {
+      await ElMessageBox.confirm('归档后项目团队成员将无法操作该项目，但数据仍保留。', '确认归档', {
+        confirmButtonText: '确认归档',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+      await request.post(`/api/projects/${projectId.value}/archive`)
+      ElMessage.success('项目已归档')
+      fetchProjectDetail()
+    } catch (error) {
+      if (error !== 'cancel') {
+        ElMessage.error('归档失败')
+      }
+    }
+  } else if (command === 'delete') {
+    try {
+      await ElMessageBox.confirm('删除后项目所有数据将无法恢复！', '确认删除', {
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        type: 'error'
+      })
+      await request.delete(`/api/projects/${projectId.value}`)
+      ElMessage.success('项目已删除')
+      router.push('/projects')
+    } catch (error) {
+      if (error !== 'cancel') {
+        ElMessage.error('删除失败')
+      }
+    }
+  }
+}
 
 // 获取项目详情
 const fetchProjectDetail = async () => {
@@ -163,6 +227,7 @@ const fetchProjectDetail = async () => {
     if (res.data?.project) {
       projectMode.value = res.data.project.settings?.mode || 'precise'
       naturalLanguageInput.value = res.data.project.settings?.naturalLanguageInput || ''
+      projectOwnerId.value = res.data.project.owner_id
       // 极简模式默认跳到画像生成
       if (projectMode.value === 'simple') {
         activeTab.value = 'generation'
@@ -186,6 +251,16 @@ const fetchPersonas = async () => {
 }
 
 onMounted(() => {
+  // 从 localStorage 获取当前用户信息
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      currentUserId.value = user.id
+    } catch (e) {
+      console.error('解析用户信息失败', e)
+    }
+  }
   fetchProjectDetail()
   fetchPersonas()
 })
