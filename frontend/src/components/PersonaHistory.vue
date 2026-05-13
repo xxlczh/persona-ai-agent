@@ -141,8 +141,16 @@
         :persona="currentPersona"
         @export="handleExport(currentPersona)"
         @delete="handleDelete(currentPersona)"
+        @edit="handleEdit"
       />
     </el-dialog>
+
+    <!-- 编辑对话框 -->
+    <PersonaEditor
+      v-model="showEditDialog"
+      :persona="editingPersona"
+      @save="handleSave"
+    />
   </div>
 </template>
 
@@ -152,6 +160,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Loading } from '@element-plus/icons-vue'
 import { personaApi } from '@/api'
 import ResultDisplay from './ResultDisplay.vue'
+import PersonaEditor from './PersonaEditor.vue'
 
 const props = defineProps({
   projectId: {
@@ -174,6 +183,10 @@ const favoriteIds = ref([])
 
 const detailDialogVisible = ref(false)
 const currentPersona = ref(null)
+
+// 编辑对话框状态
+const showEditDialog = ref(false)
+const editingPersona = ref(null)
 
 let searchTimer = null
 
@@ -305,6 +318,33 @@ const handleDelete = async (persona) => {
       console.error('删除失败:', error)
       ElMessage.error('删除失败')
     }
+  }
+}
+
+// 编辑
+const handleEdit = (persona) => {
+  editingPersona.value = persona
+  showEditDialog.value = true
+}
+
+// 保存编辑
+const handleSave = async (data) => {
+  try {
+    const res = await personaApi.update(editingPersona.value.id, data)
+    if (res.success) {
+      ElMessage.success('保存成功')
+      currentPersona.value = res.data
+      // 更新列表中的数据
+      const index = personas.value.findIndex(p => p.id === editingPersona.value.id)
+      if (index !== -1) {
+        personas.value[index] = res.data
+      }
+      showEditDialog.value = false
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (err) {
+    ElMessage.error('保存失败')
   }
 }
 
