@@ -291,9 +291,9 @@ const initFormData = () => {
     interests: p.psychological?.interests || '',
     description: p.psychological?.description || ''
   }
-  formData.needs = p.needs ? [...p.needs] : []
-  formData.scenario = p.scenario ? [...p.scenario] : []
-  formData.personality_tags = p.personality_tags ? [...p.personality_tags] : []
+  formData.needs = Array.isArray(p.needs) ? [...p.needs] : []
+  formData.scenario = Array.isArray(p.scenario) ? [...p.scenario] : []
+  formData.personality_tags = Array.isArray(p.personality_tags) ? [...p.personality_tags] : []
   formData.communication_style = p.communication_style || {}
   formData.marketing_suggestions = p.marketing_suggestions || {}
 }
