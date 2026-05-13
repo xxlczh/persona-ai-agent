@@ -51,12 +51,14 @@
               </template>
 
               <!-- 批量生成（仅精准和混合模式显示） -->
+              <!-- 批量生成功能已暂停
               <BatchGenerator
                 v-if="projectId && projectMode !== 'simple'"
                 :project-id="projectId"
                 @generated="handleBatchGenerated"
                 @view="handleViewPersona"
               />
+              -->
             </div>
           </el-tab-pane>
 

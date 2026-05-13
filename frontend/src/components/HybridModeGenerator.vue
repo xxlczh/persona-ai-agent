@@ -85,13 +85,21 @@
         </div>
 
         <el-form-item>
-          <el-button
-            type="primary"
-            :loading="generating"
-            @click="startGeneration"
-          >
-            开始生成
-          </el-button>
+          <div class="generate-btn-wrapper">
+            <el-button
+              type="primary"
+              size="large"
+              :loading="generating"
+              @click="startGeneration"
+              class="generate-btn"
+            >
+              <span v-if="!generating">
+                <el-icon><MagicStick /></el-icon>
+                开始生成用户画像
+              </span>
+              <span v-else>生成中...</span>
+            </el-button>
+          </div>
         </el-form-item>
       </el-form>
     </el-card>
@@ -177,6 +185,7 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
+import { MagicStick } from '@element-plus/icons-vue'
 import DataSelector from './DataSelector.vue'
 import ResultDisplay from './ResultDisplay.vue'
 import PersonaEditor from './PersonaEditor.vue'
@@ -469,5 +478,34 @@ const resetGenerator = () => {
 
 .iteration-card {
   margin-top: 20px;
+}
+
+.generate-btn-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.generate-btn {
+  width: 100%;
+  max-width: 400px;
+  height: 50px;
+  font-size: 16px;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #909399 0%, #b1b4bb 100%);
+  border: none;
+  box-shadow: 0 4px 15px rgba(144, 147, 153, 0.3);
+  transition: all 0.3s ease;
+}
+
+.generate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(144, 147, 153, 0.4);
+}
+
+.generate-btn:disabled {
+  transform: none;
+  box-shadow: 0 4px 15px rgba(144, 147, 153, 0.3);
 }
 </style>
