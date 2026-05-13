@@ -195,8 +195,8 @@
             </template>
             <el-descriptions :column="2" border>
               <el-descriptions-item label="综合评分">
-                <el-tag :type="getQualityTagType((persona.quality_score.overall_score || persona.quality_score.overall || 0) * 100)">
-                  {{ ((persona.quality_score.overall_score || persona.quality_score.overall) * 100 || 0).toFixed(0) }}
+                <el-tag :type="getQualityTagType(getScoreValue(persona.quality_score.overall_score || persona.quality_score.overall))">
+                  {{ getScoreValue(persona.quality_score.overall_score || persona.quality_score.overall) }}
                 </el-tag>
               </el-descriptions-item>
               <el-descriptions-item label="质量等级">
@@ -205,16 +205,16 @@
                 </el-tag>
               </el-descriptions-item>
               <el-descriptions-item label="完整性">
-                {{ formatScore(persona.quality_score?.completeness) }}
+                {{ getScoreValue(persona.quality_score?.completeness) }}
               </el-descriptions-item>
               <el-descriptions-item label="一致性">
-                {{ formatScore(persona.quality_score?.consistency) }}
+                {{ getScoreValue(persona.quality_score?.consistency) }}
               </el-descriptions-item>
               <el-descriptions-item label="真实性">
-                {{ formatScore(persona.quality_score?.authenticity) }}
+                {{ getScoreValue(persona.quality_score?.authenticity) }}
               </el-descriptions-item>
               <el-descriptions-item label="可操作性">
-                {{ formatScore(persona.quality_score?.actionability) }}
+                {{ getScoreValue(persona.quality_score?.actionability) }}
               </el-descriptions-item>
               <el-descriptions-item label="评估时间" :span="2">
                 {{ persona.quality_score?.last_evaluated_at ? formatDate(persona.quality_score.last_evaluated_at) : 'N/A' }}
@@ -335,10 +335,19 @@
 
     <!-- 操作按钮 -->
     <div class="action-buttons">
-      <el-button @click="handleExport" type="primary">
-        <el-icon><Download /></el-icon>
-        导出画像
-      </el-button>
+      <el-dropdown @command="handleExport" trigger="click">
+        <el-button type="primary">
+          <el-icon><Download /></el-icon>
+          导出画像
+          <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+        </el-button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="json">导出为 JSON</el-dropdown-item>
+            <el-dropdown-item command="markdown">导出为 Markdown</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
       <el-button @click="handleEdit">
         <el-icon><Edit /></el-icon>
         编辑
@@ -358,7 +367,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Download, Edit, Delete, Plus } from '@element-plus/icons-vue'
+import { Download, Edit, Delete, Plus, ArrowDown } from '@element-plus/icons-vue'
 
 const props = defineProps({
   persona: {
@@ -439,16 +448,118 @@ const toggleRawView = () => {
 }
 
 // 导出
-const handleExport = () => {
-  const blob = new Blob([rawJson.value], { type: 'application/json' })
+const handleExport = (format) => {
+  let content, filename, mimeType
+
+  if (format === 'markdown') {
+    content = convertToMarkdown(props.persona)
+    filename = `${props.persona.name || 'persona'}.md`
+    mimeType = 'text/markdown'
+  } else {
+    content = JSON.stringify(props.persona, null, 2)
+    filename = `${props.persona.name || 'persona'}.json`
+    mimeType = 'application/json'
+  }
+
+  const blob = new Blob([content], { type: mimeType })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `${props.persona.name || 'persona'}.json`
+  link.download = filename
   link.click()
   URL.revokeObjectURL(url)
   ElMessage.success('导出成功')
   emit('export')
+}
+
+// 转换为 Markdown 格式
+const convertToMarkdown = (persona) => {
+  let md = `# ${persona.name}\n\n`
+  md += `> ${persona.summary || '暂无摘要'}\n\n`
+
+  if (persona.quality_score) {
+    md += `## 质量评估\n\n`
+    md += `- **综合评分**: ${persona.quality_score.overall_score || persona.quality_score.overall || 'N/A'}\n`
+    md += `- **质量等级**: ${getLevelText(persona.quality_score.overall_level)}\n`
+    md += `- **完整性**: ${persona.quality_score.completeness || 'N/A'}\n`
+    md += `- **一致性**: ${persona.quality_score.consistency || 'N/A'}\n`
+    md += `- **真实性**: ${persona.quality_score.authenticity || 'N/A'}\n`
+    md += `- **可操作性**: ${persona.quality_score.actionability || 'N/A'}\n\n`
+  }
+
+  if (persona.demographic) {
+    md += `## 人口统计特征\n\n`
+    const demo = persona.demographic
+    if (demo.age || demo.age_group) md += `- **年龄**: ${demo.age || demo.age_group}\n`
+    if (demo.gender) md += `- **性别**: ${demo.gender}\n`
+    if (demo.occupation) md += `- **职业**: ${demo.occupation}\n`
+    if (demo.location) md += `- **地区**: ${demo.location}\n`
+    if (demo.income || demo.income_level) md += `- **收入**: ${demo.income || demo.income_level}\n`
+    if (demo.education) md += `- **学历**: ${demo.education}\n`
+    md += `\n`
+  }
+
+  if (persona.behavioral) {
+    md += `## 行为特征\n\n`
+    const behav = persona.behavioral
+    if (behav.shopping_habit) md += `- **消费习惯**: ${behav.shopping_habit}\n`
+    if (behav.online_preference) md += `- **线上偏好**: ${behav.online_preference}\n`
+    if (behav.brand_loyalty) md += `- **品牌忠诚度**: ${behav.brand_loyalty}\n`
+    if (behav.price_sensitivity) md += `- **价格敏感度**: ${behav.price_sensitivity}\n`
+    if (behav.decision_factor) md += `- **决策因素**: ${behav.decision_factor}\n`
+    md += `\n`
+  }
+
+  if (persona.psychological) {
+    md += `## 心理特征\n\n`
+    const psych = persona.psychological
+    if (psych.values) md += `- **价值观**: ${typeof psych.values === 'string' ? psych.values : JSON.stringify(psych.values)}\n`
+    if (psych.motivation) md += `- **动机**: ${typeof psych.motivation === 'string' ? psych.motivation : psych.motivation.join(', ')}\n`
+    if (psych.pain_points) md += `- **痛点**: ${typeof psych.pain_points === 'string' ? psych.pain_points : psych.pain_points.join(', ')}\n`
+    if (psych.aspirations) md += `- **追求/愿望**: ${typeof psych.aspirations === 'string' ? psych.aspirations : psych.aspirations.join(', ')}\n`
+    md += `\n`
+  }
+
+  if (persona.needs) {
+    md += `## 需求分析\n\n`
+    const needs = persona.needs
+    if (needs.main_need) md += `- **核心需求**: ${needs.main_need}\n`
+    if (needs.sub_needs && needs.sub_needs.length) md += `- **子需求**: ${needs.sub_needs.join(', ')}\n`
+    if (needs.unmet_needs) md += `- **未满足需求**: ${needs.unmet_needs}\n`
+    md += `\n`
+  }
+
+  if (persona.scenario) {
+    md += `## 使用场景\n\n`
+    const scen = persona.scenario
+    if (scen.usage_scene || scen.usage_scenarios?.primary) md += `- **使用场景**: ${scen.usage_scene || scen.usage_scenarios.primary}\n`
+    if (scen.content_preference) md += `- **内容偏好**: ${scen.content_preference}\n`
+    if (scen.interaction_channel) md += `- **互动渠道**: ${scen.interaction_channel}\n`
+    md += `\n`
+  }
+
+  if (persona.personality_tags && persona.personality_tags.length) {
+    md += `## 人格标签\n\n`
+    md += persona.personality_tags.map(tag => `- ${tag}`).join('\n') + '\n\n'
+  }
+
+  if (persona.communication_style) {
+    md += `## 沟通风格\n\n`
+    md += `${persona.communication_style}\n\n`
+  }
+
+  if (persona.marketing_suggestions && persona.marketing_suggestions.length) {
+    md += `## 营销建议\n\n`
+    persona.marketing_suggestions.forEach((suggestion, i) => {
+      md += `${i + 1}. ${suggestion}\n`
+    })
+    md += '\n'
+  }
+
+  md += `---\n\n`
+  md += `*由 Persona AI Agent 生成 | ${new Date().toLocaleString('zh-CN')}*\n`
+
+  return md
 }
 
 // 编辑
