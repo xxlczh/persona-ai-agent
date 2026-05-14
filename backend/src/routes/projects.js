@@ -91,22 +91,40 @@ router.get('/', authenticate, async (req, res) => {
     });
     const myIds = myProjectIds.map(p => p.id);
 
-    // 获取我加入的项目
+    // 获取我加入的项目（通过ProjectMember）
     const joinedRecords = await ProjectMember.findAll({
       where: { user_id: userId },
       attributes: ['project_id']
     });
     const joinedIds = joinedRecords.map(r => r.project_id);
 
+    // 获取我所在的团队ID列表
+    const teamMemberships = await TeamMember.findAll({
+      where: { user_id: userId },
+      attributes: ['team_id']
+    });
+    const teamIds = teamMemberships.map(m => m.team_id);
+
+    // 获取这些团队关联的项目
+    const teamProjectIds = teamIds.length > 0 ? await Project.findAll({
+      where: {
+        team_id: teamIds,
+        ...(status ? { status } : { status: { [Op.ne]: 'deleted' } })
+      },
+      attributes: ['id']
+    }) : [];
+    const teamProjectIdList = teamProjectIds.map(p => p.id);
+
     let projects = [];
     let total = 0;
 
     if (filter === 'joined') {
-      // 只看加入的项目
-      if (joinedIds.length > 0) {
+      // 只看加入的项目（包括团队项目）
+      const allJoinedIds = [...new Set([...joinedIds, ...teamProjectIdList])];
+      if (allJoinedIds.length > 0) {
         const { count, rows } = await Project.findAndCountAll({
           where: {
-            id: joinedIds,
+            id: allJoinedIds,
             ...(status ? { status } : { status: { [Op.ne]: 'deleted' } })
           },
           include: [{
@@ -123,7 +141,7 @@ router.get('/', authenticate, async (req, res) => {
       }
     } else {
       // 看全部（或我创建的）
-      const allIds = filter === 'my' ? myIds : [...new Set([...myIds, ...joinedIds])];
+      const allIds = filter === 'my' ? myIds : [...new Set([...myIds, ...joinedIds, ...teamProjectIdList])];
 
       if (allIds.length > 0) {
         const { count, rows } = await Project.findAndCountAll({
@@ -142,7 +160,7 @@ router.get('/', authenticate, async (req, res) => {
         });
         projects = rows.map(p => ({
           ...p.toJSON(),
-          is_joined: joinedIds.includes(p.id) && p.owner_id !== userId
+          is_joined: (joinedIds.includes(p.id) || teamProjectIdList.includes(p.id)) && p.owner_id !== userId
         }));
         total = count;
       } else {
@@ -192,8 +210,19 @@ router.get('/:id', authenticate, async (req, res) => {
       });
     }
 
-    // 检查权限：项目所有者或管理员可以查看
-    if (project.owner_id !== req.user.id && req.user.role !== 'admin') {
+    // 检查权限：项目所有者、管理员或团队成员可以查看
+    const isOwner = project.owner_id === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    let isTeamMember = false;
+
+    if (project.team_id) {
+      const membership = await TeamMember.findOne({
+        where: { team_id: project.team_id, user_id: req.user.id }
+      });
+      isTeamMember = !!membership;
+    }
+
+    if (!isOwner && !isAdmin && !isTeamMember) {
       return res.status(403).json({
         success: false,
         message: '没有权限查看此项目'
