@@ -96,9 +96,17 @@ async function getResourceDetail(type, id) {
         attributes: ['id', 'name', 'type', 'content', 'created_at']
       });
       if (!script) return { name: '已删除的脚本', summary: '', quality_score: null, personality_tags: [] };
+      let scriptSummary = '';
+      if (typeof script.content === 'string') {
+        scriptSummary = script.content.substring(0, 100);
+      } else if (script.content?.scenes?.length) {
+        scriptSummary = `包含 ${script.content.scenes.length} 个镜头`;
+      } else {
+        scriptSummary = JSON.stringify(script.content || '').substring(0, 100);
+      }
       return {
         name: script.name,
-        summary: script.content?.substring(0, 100) || '',
+        summary: scriptSummary,
         quality_score: null,
         personality_tags: [],
         created_at: script.created_at
