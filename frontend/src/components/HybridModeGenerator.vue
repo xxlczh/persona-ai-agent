@@ -263,6 +263,7 @@ const startGeneration = async () => {
 
     // 根据是否有数据源选择不同的生成方式
     let res;
+    const modelType = localStorage.getItem('llm_model') || 'deepseek';
     if (selectedSources.value.length > 0) {
       // 有数据源，使用精准模式
       res = await personaApi.generate({
@@ -277,7 +278,8 @@ const startGeneration = async () => {
           provider: 'openai',
           model: 'gpt-4o-mini',
           temperature: 0.7,
-          industry: formData.value.industry
+          industry: formData.value.industry,
+          modelType
         }
       })
     } else {
@@ -286,7 +288,8 @@ const startGeneration = async () => {
         projectId: props.projectId,
         industry: formData.value.industry,
         productDescription: formData.value.productDescription,
-        naturalLanguageInput: formData.value.naturalLanguageInput
+        naturalLanguageInput: formData.value.naturalLanguageInput,
+        options: { modelType }
       })
     }
 
@@ -328,11 +331,13 @@ const startIteration = async () => {
 
     // 调用迭代接口（需要后端支持）
     // 目前使用自然语言+反馈的方式重新生成
+    const modelType = localStorage.getItem('llm_model') || 'deepseek';
     const res = await personaApi.generateFromNaturalLanguage({
       projectId: props.projectId,
       industry: formData.value.industry,
       productDescription: formData.value.productDescription,
-      naturalLanguageInput: `${formData.value.naturalLanguageInput}\n\n用户反馈：${iterationForm.feedback}`
+      naturalLanguageInput: `${formData.value.naturalLanguageInput}\n\n用户反馈：${iterationForm.feedback}`,
+      options: { modelType }
     })
 
     if (res.success) {

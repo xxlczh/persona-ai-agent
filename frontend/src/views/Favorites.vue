@@ -32,6 +32,10 @@
               </div>
             </template>
             <div class="item-content">
+              <div class="creator-info" v-if="item.project?.owner">
+                <el-icon><User /></el-icon>
+                <span>{{ item.project.owner.nickname || item.project.owner.username }}</span>
+              </div>
               <div v-if="item.summary" class="summary">{{ item.summary.substring(0, 100) }}...</div>
               <div v-if="item.personality_tags?.length" class="tags">
                 <el-tag v-for="(tag, i) in item.personality_tags.slice(0, 3)" :key="i" size="small">{{ tag }}</el-tag>
@@ -92,7 +96,7 @@
             <template #header>
               <div class="item-header">
                 <span class="item-name">{{ item.name }}</span>
-                <el-tag size="small" type="info">{{ item.type }}</el-tag>
+                <el-tag size="small" type="info">{{ getScriptTypeName(item.type) }}</el-tag>
               </div>
             </template>
             <div class="item-content">
@@ -172,7 +176,7 @@
       <div v-if="currentItem" class="script-detail">
         <div class="detail-meta">
           <el-tag v-if="currentItem.persona_name" size="small">来自画像：{{ currentItem.persona_name }}</el-tag>
-          <el-tag size="small">{{ currentItem.type }}</el-tag>
+          <el-tag size="small">{{ getScriptTypeName(currentItem.type) }}</el-tag>
         </div>
         <div v-if="currentItem.content?.scenes" class="detail-scenes">
           <div v-for="(scene, i) in currentItem.content.scenes" :key="i" class="scene-item">
@@ -224,6 +228,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { User } from '@element-plus/icons-vue'
 import { marketingScriptApi, productSuggestionApi, surveyApi, personaApi } from '@/api'
 import ResultDisplay from '@/components/ResultDisplay.vue'
 
@@ -244,6 +249,11 @@ const currentItem = ref(null)
 
 const channelMap = { douyin: '抖音', kuaishou: '快手', wechat: '微信', weibo: '微博', xiaohongshu: '小红书', feeds: '信息流' }
 const getChannelName = (channel) => channelMap[channel] || channel
+
+const getScriptTypeName = (type) => {
+  const map = { video: '短视频脚本', copy: '信息流文案', social: '社交文案', strategy: '营销策略' }
+  return map[type] || type
+}
 
 const goBack = () => router.back()
 const goToProjects = () => router.push('/projects')

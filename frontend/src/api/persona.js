@@ -162,6 +162,8 @@ const personaApi = {
    * @param {string} data.naturalLanguageInput - 自然语言描述
    * @param {boolean} [data.useIndustryData] - 是否使用行业数据增强
    * @param {number} [data.count] - 生成数量
+   * @param {Object} [data.options] - 生成选项
+   * @param {string} [data.options.modelType] - 模型类型 (deepseek/zhipu/minimax)
    */
   generateFromNaturalLanguage(data) {
     return request({

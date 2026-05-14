@@ -31,6 +31,19 @@
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
+            <el-dropdown @command="handleModelChange" trigger="click" style="margin-left: 12px;">
+              <el-button type="default" plain>
+                模型: {{ getModelName(currentModel) }}
+                <el-icon class="el-icon--right"><arrow-down /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="deepseek">DeepSeek</el-dropdown-item>
+                  <el-dropdown-item command="zhipu">智谱 GLM-5.1</el-dropdown-item>
+                  <el-dropdown-item command="minimax">MiniMax</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
         </div>
       </el-header>
@@ -188,6 +201,19 @@ const isOwner = computed(() => {
   // 检查当前用户是否是项目所有者
   return currentUserId.value && projectOwnerId.value && currentUserId.value === projectOwnerId.value
 })
+
+const currentModel = ref(localStorage.getItem('llm_model') || 'deepseek')
+
+const getModelName = (model) => {
+  const names = { deepseek: 'DeepSeek', zhipu: '智谱GLM', minimax: 'MiniMax' }
+  return names[model] || model
+}
+
+const handleModelChange = (model) => {
+  currentModel.value = model
+  localStorage.setItem('llm_model', model)
+  ElMessage.success(`已切换到 ${getModelName(model)} 模型`)
+}
 
 // 处理项目操作命令
 const handleProjectCommand = async (command) => {

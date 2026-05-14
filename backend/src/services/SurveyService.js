@@ -3,7 +3,7 @@
  * 根据用户画像生成用户研究问卷
  */
 
-const { Survey, Persona, Project } = require('../models');
+const { Survey, Persona, Project, User } = require('../models');
 const llmManager = require('./llm');
 const ExtensionPrompts = require('../prompts/ExtensionPrompts');
 
@@ -159,7 +159,11 @@ class SurveyService {
     return Survey.findByPk(id, {
       include: [
         { model: Persona, as: 'persona' },
-        { model: Project, as: 'project' }
+        {
+          model: Project,
+          as: 'project',
+          include: [{ model: User, as: 'owner', attributes: ['id', 'username', 'nickname'] }]
+        }
       ]
     });
   }

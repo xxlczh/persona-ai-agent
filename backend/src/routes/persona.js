@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { Persona, Project } = require('../models');
+const { Persona, Project, User } = require('../models');
 const { Op } = require('sequelize');
 const PersonaGenerationService = require('../services/PersonaGenerationService');
 const BatchGenerationService = require('../services/BatchGenerationService');
@@ -250,7 +250,7 @@ router.post('/generate', async (req, res) => {
  */
 router.post('/generate-from-natural-language', async (req, res) => {
   try {
-    const { projectId, naturalLanguageInput, industry, productDescription, count = 1 } = req.body;
+    const { projectId, naturalLanguageInput, industry, productDescription, count = 1, options = {} } = req.body;
 
     if (!projectId) {
       return res.status(400).json({
@@ -287,7 +287,7 @@ router.post('/generate-from-natural-language', async (req, res) => {
     const persona = await personaService.generateFromNaturalLanguage(
       projectId,
       naturalLanguageInput,
-      { industry, productDescription }
+      { industry, productDescription, modelType: options.modelType }
     );
 
     res.status(201).json({
@@ -385,7 +385,12 @@ router.get('/:id', async (req, res) => {
 
     const persona = await Persona.findByPk(id, {
       include: [
-        { model: Project, as: 'project', attributes: ['id', 'name', 'description'] }
+        {
+          model: Project,
+          as: 'project',
+          attributes: ['id', 'name', 'description', 'owner_id'],
+          include: [{ model: User, as: 'owner', attributes: ['id', 'username', 'nickname'] }]
+        }
       ]
     });
 

@@ -1,17 +1,17 @@
 /**
- * 智谱 GLM 适配器
- * 支持 GLM-4, GLM-3-Turbo 等模型
+ * MiniMax 适配器
+ * 支持 MiniMax-Text-01 等模型
  */
 const axios = require('axios');
 const LLMProvider = require('./LLMProvider');
 
-class ZhipuAdapter extends LLMProvider {
+class MiniMaxAdapter extends LLMProvider {
   constructor(config = {}) {
     super(config);
-    this.name = 'zhipu';
-    this.apiKey = config.apiKey || process.env.ZHIPU_API_KEY;
-    this.model = config.model || process.env.ZHIPU_MODEL || 'glm-4';
-    this.baseURL = 'https://open.bigmodel.cn/api/paas/v4';
+    this.name = 'minimax';
+    this.apiKey = config.apiKey || process.env.MINIMAX_API_KEY;
+    this.model = config.model || process.env.MINIMAX_MODEL || 'Minimax-Text-01';
+    this.baseURL = 'https://api.minimax.chat/v1';
 
     this.client = axios.create({
       baseURL: this.baseURL,
@@ -36,30 +36,17 @@ class ZhipuAdapter extends LLMProvider {
         content: msg.content
       })),
       temperature: options.temperature ?? 0.7,
-      top_p: options.top_p || 0.9,
-      max_tokens: options.max_tokens || 65536,
-      stream: false
+      max_tokens: options.max_tokens || 4096
     };
-
-    // 如果模型支持 thinking 模式，可以启用
-    if (this.model.includes('glm-5')) {
-      payload.thinking = { type: 'enabled' };
-    }
 
     try {
       const response = await this.client.post('/chat/completions', payload);
 
       if (response.data.choices && response.data.choices.length > 0) {
-        // GLM-5 可能返回 thinking 内容，需要过滤
-        let content = response.data.choices[0].message.content;
-        // 如果内容包含 ```search_and_answer 的块，过滤掉
-        if (content && content.includes('```search_and_answer')) {
-          content = content.replace(/```search_and_answer[\s\S]*?```/g, '');
-        }
-        return content.trim();
+        return response.data.choices[0].message.content;
       }
 
-      throw new Error('No response from Zhipu GLM');
+      throw new Error('No response from MiniMax');
     } catch (error) {
       this._handleError(error);
     }
@@ -67,9 +54,6 @@ class ZhipuAdapter extends LLMProvider {
 
   /**
    * 流式聊天请求
-   * @param {Array} messages
-   * @param {Function} onChunk
-   * @param {Object} options
    */
   async chatStream(messages, onChunk, options = {}) {
     const payload = {
@@ -79,8 +63,7 @@ class ZhipuAdapter extends LLMProvider {
         content: msg.content
       })),
       temperature: options.temperature ?? 0.7,
-      top_p: options.top_p || 0.9,
-      max_tokens: options.max_tokens || 2048,
+      max_tokens: options.max_tokens || 4096,
       stream: true
     };
 
@@ -127,33 +110,19 @@ class ZhipuAdapter extends LLMProvider {
 
   /**
    * 获取可用模型列表
-   * @returns {Promise<Array>}
    */
   async listModels() {
-    try {
-      const response = await this.client.get('/models');
-      return response.data.data.map(model => ({
-        id: model.id,
-        name: model.id,
-        created: model.created
-      }));
-    } catch (error) {
-      // 如果无法获取，返回默认列表
-      return [
-        { id: 'glm-4', name: 'GLM-4' },
-        { id: 'glm-4-flash', name: 'GLM-4-Flash' },
-        { id: 'glm-3-turbo', name: 'GLM-3-Turbo' }
-      ];
-    }
+    return [
+      { id: 'Minimax-Text-01', name: 'MiniMax Text 01' }
+    ];
   }
 
   /**
    * 验证 API 配置
-   * @returns {Promise<boolean>}
    */
   async validate() {
     if (!this.apiKey) {
-      throw new Error('Zhipu GLM API key is not configured');
+      throw new Error('MiniMax API key is not configured');
     }
 
     try {
@@ -165,7 +134,7 @@ class ZhipuAdapter extends LLMProvider {
       return true;
     } catch (error) {
       if (error.response?.status === 401) {
-        throw new Error('Invalid Zhipu GLM API key');
+        throw new Error('Invalid MiniMax API key');
       }
       throw error;
     }
@@ -173,7 +142,6 @@ class ZhipuAdapter extends LLMProvider {
 
   /**
    * 处理错误
-   * @param {Error} error
    */
   _handleError(error) {
     if (error.response) {
@@ -181,11 +149,11 @@ class ZhipuAdapter extends LLMProvider {
       const data = error.response.data;
 
       if (status === 401) {
-        throw new Error('Zhipu GLM API key is invalid or expired');
+        throw new Error('MiniMax API key is invalid or expired');
       } else if (status === 429) {
-        throw new Error('Zhipu GLM API rate limit exceeded');
+        throw new Error('MiniMax API rate limit exceeded');
       } else if (data?.error?.message) {
-        throw new Error(`Zhipu GLM error: ${data.error.message}`);
+        throw new Error(`MiniMax error: ${data.error.message}`);
       }
     }
 
@@ -193,4 +161,4 @@ class ZhipuAdapter extends LLMProvider {
   }
 }
 
-module.exports = ZhipuAdapter;
+module.exports = MiniMaxAdapter;

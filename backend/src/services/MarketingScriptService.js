@@ -3,7 +3,7 @@
  * 根据用户画像生成营销内容
  */
 
-const { MarketingScript, Persona, Project } = require('../models');
+const { MarketingScript, Persona, Project, User } = require('../models');
 const llmManager = require('./llm');
 const ExtensionPrompts = require('../prompts/ExtensionPrompts');
 
@@ -153,7 +153,11 @@ class MarketingScriptService {
     return MarketingScript.findByPk(id, {
       include: [
         { model: Persona, as: 'persona' },
-        { model: Project, as: 'project' }
+        {
+          model: Project,
+          as: 'project',
+          include: [{ model: User, as: 'owner', attributes: ['id', 'username', 'nickname'] }]
+        }
       ]
     });
   }

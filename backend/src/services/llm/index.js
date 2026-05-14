@@ -6,12 +6,13 @@ const OpenAIAdapter = require('./OpenAIAdapter');
 const ErnieAdapter = require('./ErnieAdapter');
 const ZhipuAdapter = require('./ZhipuAdapter');
 const DeepSeekAdapter = require('./DeepSeekAdapter');
+const MiniMaxAdapter = require('./MiniMaxAdapter');
 
 class LLMManager {
   constructor() {
     this.providers = {};
     this.currentProvider = null;
-    this.defaultProvider = process.env.DEFAULT_LLM_PROVIDER || 'openai';
+    this.defaultProvider = process.env.DEFAULT_LLM_PROVIDER || 'deepseek';
 
     // 初始化所有适配器
     this._initProviders();
@@ -51,6 +52,14 @@ class LLMManager {
       this.providers.deepseek = new DeepSeekAdapter({
         apiKey: process.env.DEEPSEEK_API_KEY,
         model: process.env.DEEPSEEK_MODEL
+      });
+    }
+
+    // MiniMax
+    if (process.env.MINIMAX_API_KEY) {
+      this.providers.minimax = new MiniMaxAdapter({
+        apiKey: process.env.MINIMAX_API_KEY,
+        model: process.env.MINIMAX_MODEL
       });
     }
 

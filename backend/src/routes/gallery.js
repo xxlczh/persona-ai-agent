@@ -1,6 +1,7 @@
 const express = require('express');
 const { Share, User, Persona, Survey, MarketingScript, ProductSuggestion } = require('../models');
-const { authenticate, optionalAuth } = require('../middleware/auth');
+const { optionalAuth } = require('../middleware/auth');
+const { Op } = require('sequelize');
 
 const router = express.Router();
 
@@ -12,10 +13,13 @@ router.get('/', optionalAuth, async (req, res) => {
     const { type, page = 1, limit = 20 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    // 构建查询条件
     const where = { status: 'shared' };
     if (type && ['persona', 'survey', 'script', 'suggestion'].includes(type)) {
-      where.resource_type = type;
+      if (type === 'script') {
+        where.resource_type = 'script'
+      } else {
+        where.resource_type = type
+      }
     }
 
     const { count, rows: shares } = await Share.findAndCountAll({
@@ -30,7 +34,6 @@ router.get('/', optionalAuth, async (req, res) => {
       offset
     });
 
-    // 获取每个分享的详细内容
     const items = await Promise.all(shares.map(async (share) => {
       const resource = await getResourceDetail(share.resource_type, share.resource_id);
       return {
@@ -67,7 +70,7 @@ router.get('/', optionalAuth, async (req, res) => {
 // 辅助函数：获取资源详细信息
 async function getResourceDetail(type, id) {
   switch (type) {
-    case 'persona':
+    case 'persona': {
       const persona = await Persona.findByPk(id, {
         attributes: ['id', 'name', 'summary', 'quality_score', 'personality_tags', 'created_at']
       });
@@ -79,21 +82,30 @@ async function getResourceDetail(type, id) {
         personality_tags: persona.personality_tags || [],
         created_at: persona.created_at
       };
-    case 'survey':
+    }
+    case 'survey': {
       const survey = await Survey.findByPk(id, {
-        attributes: ['id', 'name', 'description', 'status', 'created_at']
+        attributes: ['id', 'name', 'description', 'status', 'created_at', 'persona_id', 'questions', 'settings'],
+        include: [{ model: Persona, as: 'persona', attributes: ['id', 'name'] }]
       });
       if (!survey) return { name: '已删除的问卷', summary: '', quality_score: null, personality_tags: [] };
       return {
         name: survey.name,
+        description: survey.description,
         summary: survey.description || '',
         quality_score: null,
         personality_tags: [],
+        questions: survey.questions || [],
+        settings: survey.settings,
+        persona_id: survey.persona_id,
+        persona_name: survey.persona?.name,
         created_at: survey.created_at
       };
-    case 'script':
+    }
+    case 'script': {
       const script = await MarketingScript.findByPk(id, {
-        attributes: ['id', 'name', 'type', 'content', 'created_at']
+        attributes: ['id', 'name', 'type', 'content', 'created_at', 'persona_id'],
+        include: [{ model: Persona, as: 'persona', attributes: ['id', 'name'] }]
       });
       if (!script) return { name: '已删除的脚本', summary: '', quality_score: null, personality_tags: [] };
       let scriptSummary = '';
@@ -107,22 +119,35 @@ async function getResourceDetail(type, id) {
       return {
         name: script.name,
         summary: scriptSummary,
+        content: script.content,
         quality_score: null,
         personality_tags: [],
+        type: script.type,
+        persona_id: script.persona_id,
+        persona_name: script.persona?.name,
         created_at: script.created_at
       };
-    case 'suggestion':
+    }
+    case 'suggestion': {
       const suggestion = await ProductSuggestion.findByPk(id, {
-        attributes: ['id', 'name', 'created_at']
+        attributes: ['id', 'name', 'summary', 'suggestions', 'priorities', 'competitor_analysis', 'confidence_score', 'created_at', 'persona_id'],
+        include: [{ model: Persona, as: 'persona', attributes: ['id', 'name'] }]
       });
       if (!suggestion) return { name: '已删除的建议', summary: '', quality_score: null, personality_tags: [] };
       return {
         name: suggestion.name,
-        summary: '',
+        summary: suggestion.summary || '',
+        suggestions: suggestion.suggestions || [],
+        priorities: suggestion.priorities || {},
+        competitor_analysis: suggestion.competitor_analysis,
+        confidence_score: suggestion.confidence_score,
         quality_score: null,
         personality_tags: [],
+        persona_id: suggestion.persona_id,
+        persona_name: suggestion.persona?.name,
         created_at: suggestion.created_at
       };
+    }
     default:
       return { name: '未知', summary: '', quality_score: null, personality_tags: [] };
   }

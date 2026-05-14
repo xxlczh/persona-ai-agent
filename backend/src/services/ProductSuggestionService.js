@@ -3,7 +3,7 @@
  * 根据用户画像生成产品功能建议报告
  */
 
-const { ProductSuggestion, Persona, Project } = require('../models');
+const { ProductSuggestion, Persona, Project, User } = require('../models');
 const llmManager = require('./llm');
 const ExtensionPrompts = require('../prompts/ExtensionPrompts');
 
@@ -60,6 +60,15 @@ class ProductSuggestionService {
     const reportData = this.parseJSONResponse(response);
 
     // 6. 保存到数据库
+    let confidenceScore = reportData.confidence_score || null
+    // 如果 confidence_score > 1，假设它是百分比（如 82 表示 82%），转换为小数（如 0.82）
+    if (confidenceScore !== null && confidenceScore > 1) {
+      confidenceScore = confidenceScore / 100
+    }
+    // 确保在有效范围内
+    if (confidenceScore !== null && (confidenceScore < 0 || confidenceScore > 1)) {
+      confidenceScore = confidenceScore > 1 ? 0.99 : 0
+    }
     const report = await ProductSuggestion.create({
       project_id: projectId,
       persona_id: personaId || null,
@@ -68,7 +77,7 @@ class ProductSuggestionService {
       suggestions: reportData.suggestions || [],
       priorities: reportData.priorities || {},
       competitor_analysis: reportData.competitor_analysis || null,
-      confidence_score: reportData.confidence_score || null,
+      confidence_score: confidenceScore,
       status: 'draft',
       created_by: userId
     });
@@ -148,7 +157,11 @@ class ProductSuggestionService {
     return ProductSuggestion.findByPk(id, {
       include: [
         { model: Persona, as: 'persona' },
-        { model: Project, as: 'project' }
+        {
+          model: Project,
+          as: 'project',
+          include: [{ model: User, as: 'owner', attributes: ['id', 'username', 'nickname'] }]
+        }
       ]
     });
   }

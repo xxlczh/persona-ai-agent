@@ -208,7 +208,8 @@ const startGeneration = async () => {
         provider: 'openai',
         model: 'gpt-4o-mini',
         temperature: 0.7,
-        industry: formData.value.industry
+        industry: formData.value.industry,
+        modelType: localStorage.getItem('llm_model') || 'deepseek'
       }
     })
 

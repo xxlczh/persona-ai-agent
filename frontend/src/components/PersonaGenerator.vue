@@ -191,7 +191,8 @@ const startGeneration = async () => {
         customPrompt: config.customPrompt,
         provider: config.provider,
         model: config.model,
-        temperature: config.temperature
+        temperature: config.temperature,
+        modelType: localStorage.getItem('llm_model') || 'deepseek'
       }
     }
 

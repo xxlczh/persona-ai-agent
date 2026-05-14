@@ -304,7 +304,7 @@ class PersonaGenerationService {
    */
   parseJSONResponse(response) {
     if (!response) {
-      throw new Error("LLM 返回为空");
+      throw new Error('LLM 返回为空');
     }
 
     let cleanedResponse = response
@@ -329,11 +329,11 @@ class PersonaGenerationService {
     }
 
     if (!jsonStr) {
-      throw new Error("无法从响应中解析 JSON");
+      throw new Error('无法从响应中解析 JSON');
     }
 
     jsonStr = jsonStr.replace(/"/g, '"').replace(/"/g, '"');
-    jsonStr = jsonStr.replace(/'/g, "'").replace(/'/g, "'");
+    jsonStr = jsonStr.replace(/'/g, '\'').replace(/'/g, '\'');
     jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, '');
     jsonStr = jsonStr.trim();
 
@@ -353,12 +353,12 @@ class PersonaGenerationService {
         return JSON.parse(jsonStr);
       } catch (error2) {
         // 最后尝试：只提取有效的JSON部分
-        console.error("JSON解析再次失败，尝试提取有效部分");
+        console.error('JSON解析再次失败，尝试提取有效部分');
         const validJson = this.extractValidJson(jsonStr);
         if (validJson) {
           return validJson;
         }
-        throw new Error("JSON 解析失败: " + error2.message);
+        throw new Error('JSON 解析失败: ' + error2.message);
       }
     }
   }
@@ -389,7 +389,7 @@ class PersonaGenerationService {
         return JSON.parse(jsonPart);
       }
     } catch (e) {
-      console.error("提取有效JSON失败:", e.message);
+      console.error('提取有效JSON失败:', e.message);
     }
     return null;
   }
@@ -450,7 +450,7 @@ class PersonaGenerationService {
   async update(id, data) {
     const persona = await Persona.findByPk(id);
     if (!persona) {
-      throw new Error("画像不存在");
+      throw new Error('画像不存在');
     }
 
     const allowedFields = [
@@ -476,7 +476,7 @@ class PersonaGenerationService {
   async delete(id) {
     const persona = await Persona.findByPk(id);
     if (!persona) {
-      throw new Error("画像不存在");
+      throw new Error('画像不存在');
     }
 
     await persona.destroy();
@@ -506,7 +506,7 @@ class PersonaGenerationService {
         max_tokens: config.max_tokens || 2000
       });
 
-      console.log("LLM原始响应:", response.substring(0, 300));
+      console.log('LLM原始响应:', response.substring(0, 300));
 
       const result = this.parseJSONResponse(response);
 
@@ -546,7 +546,7 @@ class PersonaGenerationService {
       throw error;
     }
   }
-/**
+  /**
    * 自动评估画像质量
    */
   async autoEvaluate(persona) {

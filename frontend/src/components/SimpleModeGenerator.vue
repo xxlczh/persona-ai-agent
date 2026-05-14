@@ -198,7 +198,10 @@ const startGeneration = async () => {
       projectId: props.projectId,
       industry: formData.value.industry,
       productDescription: formData.value.productDescription,
-      naturalLanguageInput: formData.value.naturalLanguageInput
+      naturalLanguageInput: formData.value.naturalLanguageInput,
+      options: {
+        modelType: localStorage.getItem('llm_model') || 'deepseek'
+      }
     })
 
     if (res.success) {
