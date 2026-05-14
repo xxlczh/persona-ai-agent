@@ -26,11 +26,13 @@ const personaApi = {
    * @param {number[]|string[]} data.sourceDataIds - 数据源 IDs
    * @param {Object} [data.config] - 生成配置
    */
-  generate(data) {
+  generate(data, options = {}) {
     return request({
       url: '/api/persona/generate',
       method: 'post',
-      data
+      data,
+      timeout: 120000,
+      ...options
     });
   },
 
@@ -165,11 +167,13 @@ const personaApi = {
    * @param {Object} [data.options] - 生成选项
    * @param {string} [data.options.modelType] - 模型类型 (deepseek/zhipu/minimax)
    */
-  generateFromNaturalLanguage(data) {
+  generateFromNaturalLanguage(data, options = {}) {
     return request({
       url: '/api/persona/generate-from-natural-language',
       method: 'post',
-      data
+      data,
+      timeout: 120000,
+      ...options
     });
   }
 };
