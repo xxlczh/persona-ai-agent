@@ -334,6 +334,7 @@ class PersonaGenerationService {
 
     jsonStr = jsonStr.replace(/"/g, '"').replace(/"/g, '"');
     jsonStr = jsonStr.replace(/'/g, '\'').replace(/'/g, '\'');
+    // eslint-disable-next-line no-control-regex
     jsonStr = jsonStr.replace(/[\x00-\x1F\x7F]/g, '');
     jsonStr = jsonStr.trim();
 

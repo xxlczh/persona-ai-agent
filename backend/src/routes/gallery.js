@@ -16,9 +16,9 @@ router.get('/', optionalAuth, async (req, res) => {
     const where = { status: 'shared' };
     if (type && ['persona', 'survey', 'script', 'suggestion'].includes(type)) {
       if (type === 'script') {
-        where.resource_type = 'script'
+        where.resource_type = 'script';
       } else {
-        where.resource_type = type
+        where.resource_type = type;
       }
     }
 

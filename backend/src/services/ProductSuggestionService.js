@@ -60,14 +60,14 @@ class ProductSuggestionService {
     const reportData = this.parseJSONResponse(response);
 
     // 6. 保存到数据库
-    let confidenceScore = reportData.confidence_score || null
+    let confidenceScore = reportData.confidence_score || null;
     // 如果 confidence_score > 1，假设它是百分比（如 82 表示 82%），转换为小数（如 0.82）
     if (confidenceScore !== null && confidenceScore > 1) {
-      confidenceScore = confidenceScore / 100
+      confidenceScore = confidenceScore / 100;
     }
     // 确保在有效范围内
     if (confidenceScore !== null && (confidenceScore < 0 || confidenceScore > 1)) {
-      confidenceScore = confidenceScore > 1 ? 0.99 : 0
+      confidenceScore = confidenceScore > 1 ? 0.99 : 0;
     }
     const report = await ProductSuggestion.create({
       project_id: projectId,
