@@ -100,7 +100,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { teamApi } from '@/api';
+import { teamApi, projectApi } from '@/api';
 
 const props = defineProps({
   projectId: {
@@ -204,7 +204,19 @@ const copyInviteCode = () => {
 const handleRemoveMember = async (member) => {
   try {
     await teamApi.removeTeamMember(selectedTeam.value.id, member.user_id);
-    ElMessage.success('成员已移除');
+    ElMessage.success('成员已从团队移除');
+
+    // 如果有项目关联，也从项目中移除该成员
+    if (props.projectId) {
+      try {
+        await projectApi.removeMember(props.projectId, member.user_id);
+        ElMessage.success('成员已从项目移除');
+      } catch (err) {
+        console.error('从项目移除成员失败:', err);
+        // 不影响主流程
+      }
+    }
+
     selectTeam(selectedTeam.value);
   } catch (error) {
     console.error('移除成员失败:', error);

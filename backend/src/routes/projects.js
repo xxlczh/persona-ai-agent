@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 const { Project, User, ProjectMember, Team, TeamMember } = require('../models');
 const { authenticate } = require('../middleware/auth');
+const { checkProjectAccess } = require('./helpers/projectAccess');
 const crypto = require('crypto');
 
 const router = express.Router();
@@ -91,12 +92,19 @@ router.get('/', authenticate, async (req, res) => {
     });
     const myIds = myProjectIds.map(p => p.id);
 
-    // 获取我加入的项目（通过ProjectMember）
+    // 获取我加入的项目（通过ProjectMember，只查询active状态）
     const joinedRecords = await ProjectMember.findAll({
-      where: { user_id: userId },
+      where: { user_id: userId, status: 'active' },
       attributes: ['project_id']
     });
     const joinedIds = joinedRecords.map(r => r.project_id);
+
+    // 获取已移除的项目成员记录
+    const removedRecords = await ProjectMember.findAll({
+      where: { user_id: userId, status: 'removed' },
+      attributes: ['project_id']
+    });
+    const removedIds = removedRecords.map(r => r.project_id);
 
     // 获取我所在的团队ID列表
     const teamMemberships = await TeamMember.findAll({
@@ -136,12 +144,20 @@ router.get('/', authenticate, async (req, res) => {
           offset: parseInt(offset),
           order: [['created_at', 'DESC']]
         });
-        projects = rows.map(p => ({ ...p.toJSON(), is_joined: true }));
+        projects = rows.map(p => {
+          const isJoined = joinedIds.includes(p.id) || teamProjectIdList.includes(p.id);
+          const isRemoved = removedIds.includes(p.id);
+          return {
+            ...p.toJSON(),
+            is_joined: isJoined && !isRemoved,
+            membership_status: isRemoved ? 'removed' : (isJoined ? 'active' : null)
+          };
+        });
         total = count;
       }
     } else {
-      // 看全部（或我创建的）
-      const allIds = filter === 'my' ? myIds : [...new Set([...myIds, ...joinedIds, ...teamProjectIdList])];
+      // 看全部（或我创建的，包含已移除的）
+      const allIds = filter === 'my' ? myIds : [...new Set([...myIds, ...joinedIds, ...removedIds, ...teamProjectIdList])];
 
       if (allIds.length > 0) {
         const { count, rows } = await Project.findAndCountAll({
@@ -158,14 +174,16 @@ router.get('/', authenticate, async (req, res) => {
           offset: parseInt(offset),
           order: [['created_at', 'DESC']]
         });
-        projects = rows.map(p => ({
-          ...p.toJSON(),
-          is_joined: (joinedIds.includes(p.id) || teamProjectIdList.includes(p.id)) && p.owner_id !== userId
-        }));
+        projects = rows.map(p => {
+          const isJoined = joinedIds.includes(p.id) || teamProjectIdList.includes(p.id);
+          const isRemoved = removedIds.includes(p.id);
+          return {
+            ...p.toJSON(),
+            is_joined: isJoined && !isRemoved,
+            membership_status: isRemoved ? 'removed' : (isJoined ? 'active' : null)
+          };
+        });
         total = count;
-      } else {
-        projects = [];
-        total = 0;
       }
     }
 
@@ -500,12 +518,23 @@ router.post('/join', authenticate, async (req, res) => {
       });
     }
 
-    // 检查是否已经加入
+    // 检查是否已经加入（包含已移除的）
     const existing = await ProjectMember.findOne({
       where: { project_id: project.id, user_id: userId }
     });
 
     if (existing) {
+      // 如果是已移除的成员，重新激活
+      if (existing.status === 'removed') {
+        existing.status = 'active';
+        existing.joined_at = new Date();
+        await existing.save();
+        return res.json({
+          success: true,
+          message: '已重新加入项目',
+          data: { project }
+        });
+      }
       return res.status(400).json({
         success: false,
         message: '您已加入该项目'
@@ -515,7 +544,8 @@ router.post('/join', authenticate, async (req, res) => {
     // 添加项目成员
     await ProjectMember.create({
       project_id: project.id,
-      user_id: userId
+      user_id: userId,
+      status: 'active'
     });
 
     // 如果该项目已有团队，自动将用户加入团队
@@ -612,7 +642,7 @@ router.delete('/:id/leave', authenticate, async (req, res) => {
     }
 
     const member = await ProjectMember.findOne({
-      where: { project_id: project.id, user_id: req.user.id }
+      where: { project_id: project.id, user_id: req.user.id, status: 'active' }
     });
 
     if (!member) {
@@ -622,7 +652,9 @@ router.delete('/:id/leave', authenticate, async (req, res) => {
       });
     }
 
-    await member.destroy();
+    // 软删除：标记为已移除
+    member.status = 'removed';
+    await member.save();
 
     res.json({
       success: true,
@@ -633,6 +665,74 @@ router.delete('/:id/leave', authenticate, async (req, res) => {
     res.status(500).json({
       success: false,
       message: '退出项目失败'
+    });
+  }
+});
+
+/**
+ * DELETE /api/projects/:id/members/:userId - 移除项目成员（管理员）
+ */
+router.delete('/:id/members/:userId', authenticate, async (req, res) => {
+  try {
+    const projectId = parseInt(req.params.id);
+    const memberUserId = parseInt(req.params.userId);
+
+    if (isNaN(projectId) || isNaN(memberUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: '无效的参数'
+      });
+    }
+
+    const project = await Project.findByPk(projectId);
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: '项目不存在'
+      });
+    }
+
+    // 只有项目所有者或管理员可以移除成员
+    if (project.owner_id !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: '没有权限移除此项目成员'
+      });
+    }
+
+    // 不能移除项目所有者
+    if (memberUserId === project.owner_id) {
+      return res.status(400).json({
+        success: false,
+        message: '无法移除项目所有者'
+      });
+    }
+
+    const member = await ProjectMember.findOne({
+      where: { project_id: projectId, user_id: memberUserId, status: 'active' }
+    });
+
+    if (!member) {
+      return res.status(404).json({
+        success: false,
+        message: '该成员不在项目中'
+      });
+    }
+
+    // 软删除：标记为已移除
+    member.status = 'removed';
+    await member.save();
+
+    res.json({
+      success: true,
+      message: '成员已移除'
+    });
+  } catch (error) {
+    console.error('Remove project member error:', error);
+    res.status(500).json({
+      success: false,
+      message: '移除成员失败'
     });
   }
 });

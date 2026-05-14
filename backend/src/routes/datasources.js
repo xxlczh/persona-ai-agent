@@ -5,6 +5,7 @@ const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const { DataSource, Project, Team, TeamMember } = require('../models');
 const { authenticate } = require('../middleware/auth');
+const { checkProjectAccess } = require('./helpers/projectAccess');
 
 const router = express.Router();
 
@@ -91,8 +92,9 @@ router.post('/', authenticate, upload.single('file'), [
       });
     }
 
-    // 检查权限：项目所有者可以上传
-    if (project.owner_id !== req.user.id && req.user.role !== 'admin') {
+    // 检查权限：项目所有者或团队成员可以上传
+    const accessResult = await checkProjectAccess(project_id, req.user.id);
+    if (!accessResult.hasAccess) {
       return res.status(403).json({
         success: false,
         message: '没有权限在此项目中上传数据源'
@@ -172,29 +174,9 @@ router.get('/', authenticate, async (req, res) => {
         });
       }
 
-      // 检查权限
-      let hasAccess = project.owner_id === req.user.id || req.user.role === 'admin';
-
-      // 检查团队成员权限
-      if (!hasAccess && project.team_id) {
-        const membership = await TeamMember.findOne({
-          where: { team_id: project.team_id, user_id: req.user.id }
-        });
-        hasAccess = !!membership;
-      }
-
-      // 通过 Team.project_id 检查（旧方式）
-      if (!hasAccess) {
-        const team = await Team.findOne({ where: { project_id: project.id } });
-        if (team) {
-          const membership = await TeamMember.findOne({
-            where: { team_id: team.id, user_id: req.user.id }
-          });
-          hasAccess = !!membership;
-        }
-      }
-
-      if (!hasAccess) {
+      // 使用统一的权限检查（包含团队成员检查）
+      const accessResult = await checkProjectAccess(project_id, req.user.id);
+      if (!accessResult.hasAccess) {
         return res.status(403).json({
           success: false,
           message: '没有权限查看此项目的数据源'
@@ -210,24 +192,14 @@ router.get('/', authenticate, async (req, res) => {
       where.status = status;
     }
 
-    // 非管理员只能看到自己项目的数据源
-    if (req.user.role !== 'admin') {
+    // 非管理员且未指定项目时，只能看到自己项目的数据源
+    if (req.user.role !== 'admin' && !project_id) {
       const userProjects = await Project.findAll({
         where: { owner_id: req.user.id },
         attributes: ['id']
       });
       const projectIds = userProjects.map(p => p.id);
-
-      if (project_id) {
-        if (!projectIds.includes(parseInt(project_id))) {
-          return res.status(403).json({
-            success: false,
-            message: '没有权限查看此项目的数据源'
-          });
-        }
-      } else {
-        where.project_id = { [require('sequelize').Op.in]: projectIds };
-      }
+      where.project_id = { [require('sequelize').Op.in]: projectIds };
     }
 
     const { count, rows } = await DataSource.findAndCountAll({
@@ -284,8 +256,8 @@ router.get('/:id', authenticate, async (req, res) => {
     }
 
     // 检查权限
-    const project = await Project.findByPk(dataSource.project_id);
-    if (project.owner_id !== req.user.id && req.user.role !== 'admin') {
+    const accessResult = await checkProjectAccess(dataSource.project_id, req.user.id);
+    if (!accessResult.hasAccess) {
       return res.status(403).json({
         success: false,
         message: '没有权限查看此数据源'
@@ -320,8 +292,8 @@ router.delete('/:id', authenticate, async (req, res) => {
     }
 
     // 检查权限
-    const project = await Project.findByPk(dataSource.project_id);
-    if (project.owner_id !== req.user.id && req.user.role !== 'admin') {
+    const accessResult = await checkProjectAccess(dataSource.project_id, req.user.id);
+    if (!accessResult.hasAccess) {
       return res.status(403).json({
         success: false,
         message: '没有权限删除此数据源'
@@ -374,8 +346,8 @@ router.put('/:id', authenticate, [
     }
 
     // 检查权限
-    const project = await Project.findByPk(dataSource.project_id);
-    if (project.owner_id !== req.user.id && req.user.role !== 'admin') {
+    const accessResult = await checkProjectAccess(dataSource.project_id, req.user.id);
+    if (!accessResult.hasAccess) {
       return res.status(403).json({
         success: false,
         message: '没有权限更新此数据源'

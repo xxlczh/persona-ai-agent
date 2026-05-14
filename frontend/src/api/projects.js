@@ -107,6 +107,18 @@ const projectApi = {
       url: `/api/projects/${id}/invite-code`,
       method: 'get'
     });
+  },
+
+  /**
+   * 移除项目成员
+   * @param {number|string} projectId - 项目 ID
+   * @param {number|string} memberUserId - 成员用户 ID
+   */
+  removeMember(projectId, memberUserId) {
+    return request({
+      url: `/api/projects/${projectId}/members/${memberUserId}`,
+      method: 'delete'
+    });
   }
 };
 

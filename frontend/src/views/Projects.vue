@@ -69,7 +69,8 @@
                 <div class="card-header">
                   <div class="project-name">
                     <span>{{ project.name }}</span>
-                    <el-tag v-if="project.is_joined" size="small" type="info">已加入</el-tag>
+                    <el-tag v-if="project.membership_status === 'removed'" size="small" type="danger">已被移除</el-tag>
+                    <el-tag v-else-if="project.is_joined" size="small" type="info">已加入</el-tag>
                   </div>
                   <div class="card-tags">
                     <el-tag size="small" :type="getModeTagType(project.settings?.mode)">

@@ -232,11 +232,28 @@ class TeamService {
       where: { team_id: teamId, user_id: memberUserId }
     });
 
+    // 如果成员不存在，直接返回成功（幂等性）
     if (!member) {
-      throw new Error('该成员不在团队中');
+      console.log('成员不在团队中，可能是重复移除');
+      return { success: true, message: '成员不在团队中' };
     }
 
     await member.destroy();
+
+    // 如果团队关联了项目，也更新project_members的status为removed
+    // 注意：这个更新失败不应该影响成员移除的成功状态
+    if (team.project_id) {
+      try {
+        await ProjectMember.update(
+          { status: 'removed' },
+          { where: { project_id: team.project_id, user_id: memberUserId, status: 'active' } }
+        );
+      } catch (updateErr) {
+        console.error('更新项目成员状态失败:', updateErr.message);
+        // 不影响主流程，成员已从团队移除
+      }
+    }
+
     return { success: true };
   }
 

@@ -20,6 +20,12 @@ const ProjectMember = sequelize.define('ProjectMember', {
   joined_at: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  status: {
+    type: DataTypes.ENUM('active', 'removed'),
+    defaultValue: 'active',
+    allowNull: false,
+    field: 'status'
   }
 }, {
   tableName: 'project_members',
