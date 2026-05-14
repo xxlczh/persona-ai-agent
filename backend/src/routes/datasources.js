@@ -3,7 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { body, validationResult } = require('express-validator');
-const { DataSource, Project } = require('../models');
+const { DataSource, Project, Team, TeamMember } = require('../models');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
@@ -173,7 +173,28 @@ router.get('/', authenticate, async (req, res) => {
       }
 
       // 检查权限
-      if (project.owner_id !== req.user.id && req.user.role !== 'admin') {
+      let hasAccess = project.owner_id === req.user.id || req.user.role === 'admin';
+
+      // 检查团队成员权限
+      if (!hasAccess && project.team_id) {
+        const membership = await TeamMember.findOne({
+          where: { team_id: project.team_id, user_id: req.user.id }
+        });
+        hasAccess = !!membership;
+      }
+
+      // 通过 Team.project_id 检查（旧方式）
+      if (!hasAccess) {
+        const team = await Team.findOne({ where: { project_id: project.id } });
+        if (team) {
+          const membership = await TeamMember.findOne({
+            where: { team_id: team.id, user_id: req.user.id }
+          });
+          hasAccess = !!membership;
+        }
+      }
+
+      if (!hasAccess) {
         return res.status(403).json({
           success: false,
           message: '没有权限查看此项目的数据源'

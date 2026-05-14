@@ -76,11 +76,18 @@ class TeamService {
       ]
     });
 
-    // 作为团队成员
+    // 作为团队成员 - 需要包含 members
     const memberships = await TeamMember.findAll({
       where: { user_id: userId },
       include: [
-        { model: Team, as: 'team', include: [{ model: User, as: 'owner', attributes: ['id', 'username', 'avatar'] }] }
+        {
+          model: Team,
+          as: 'team',
+          include: [
+            { model: User, as: 'owner', attributes: ['id', 'username', 'avatar'] },
+            { model: TeamMember, as: 'members' }
+          ]
+        }
       ]
     });
 
