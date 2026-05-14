@@ -108,6 +108,13 @@
             >
               {{ isFavorited(persona.id) ? '已收藏' : '收藏' }}
             </el-button>
+            <el-button
+              size="small"
+              :type="isShared(persona.id) ? 'success' : 'info'"
+              @click.stop="toggleShare(persona)"
+            >
+              {{ isShared(persona.id) ? '已分享' : '分享' }}
+            </el-button>
             <el-button size="small" type="danger" text @click.stop="handleDelete(persona)">
               删除
             </el-button>
@@ -159,6 +166,7 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Loading } from '@element-plus/icons-vue'
 import { personaApi } from '@/api'
+import request from '@/api/request'
 import ResultDisplay from './ResultDisplay.vue'
 import PersonaEditor from './PersonaEditor.vue'
 
@@ -180,6 +188,7 @@ const searchKeyword = ref('')
 const filterStatus = ref('')
 const sortBy = ref('desc')
 const favoriteIds = ref([])
+const sharedIds = ref([])
 
 const detailDialogVisible = ref(false)
 const currentPersona = ref(null)
@@ -216,6 +225,41 @@ const toggleFavorite = (persona) => {
   favoriteIds.value = favorites
 }
 
+const checkShareStatus = async () => {
+  try {
+    const res = await request.get('/api/shares/my')
+    const shares = res.data?.items || []
+    sharedIds.value = shares
+      .filter(s => s.type === 'persona')
+      .map(s => s.resource_id)
+  } catch (e) {
+    console.error('检查分享状态失败:', e)
+  }
+}
+
+const isShared = (personaId) => {
+  return sharedIds.value.includes(personaId)
+}
+
+const toggleShare = async (persona) => {
+  try {
+    if (isShared(persona.id)) {
+      await request.delete(`/api/shares/persona/${persona.id}`)
+      ElMessage.success('已取消分享')
+      sharedIds.value = sharedIds.value.filter(id => id !== persona.id)
+    } else {
+      await request.post('/api/shares', {
+        resource_type: 'persona',
+        resource_id: persona.id
+      })
+      ElMessage.success('已分享到作品广场')
+      sharedIds.value.push(persona.id)
+    }
+  } catch (e) {
+    ElMessage.error(isShared(persona.id) ? '取消分享失败' : '分享失败')
+  }
+}
+
 const fetchPersonas = async () => {
   loading.value = true
   loadFavorites()
@@ -233,6 +277,7 @@ const fetchPersonas = async () => {
       personas.value = res.data.rows || []
       total.value = res.data.total || 0
     }
+    await checkShareStatus()
   } catch (error) {
     console.error('获取画像列表失败:', error)
     ElMessage.error('获取画像列表失败')

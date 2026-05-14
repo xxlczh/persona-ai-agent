@@ -32,6 +32,7 @@
         <div class="item-actions">
           <el-button size="small" type="primary" @click.stop="handleView(item)">查看</el-button>
           <el-button size="small" :type="isFavorited(item.id) ? 'warning' : ''" @click.stop="handleToggleFavorite(item)">{{ isFavorited(item.id) ? '已收藏' : '收藏' }}</el-button>
+          <el-button size="small" :type="isShared(item.id) ? 'success' : ''" @click.stop="handleToggleShare(item)">{{ isShared(item.id) ? '已分享' : '分享' }}</el-button>
           <el-button size="small" @click="handleExport(item)">导出</el-button>
         </div>
       </el-card>
@@ -116,6 +117,7 @@
 import { ref } from 'vue'
 import { surveyApi, marketingScriptApi, productSuggestionApi, personaApi } from '@/api'
 import { ElMessage } from 'element-plus'
+import request from '@/api/request'
 
 const props = defineProps({
   projectId: {
@@ -128,6 +130,7 @@ const loading = ref(false)
 const items = ref([])
 const activeType = ref('survey')
 const favoriteIds = ref([])
+const sharedIds = ref([])
 
 const surveyDialogVisible = ref(false)
 const scriptDialogVisible = ref(false)
@@ -149,6 +152,7 @@ const fetchData = async () => {
       const res = await productSuggestionApi.getList(props.projectId)
       items.value = res.data?.rows || res.data || []
     }
+    await checkShareStatus()
   } catch (error) {
     console.error('获取历史记录失败:', error)
     ElMessage.error('获取历史记录失败')
@@ -263,6 +267,51 @@ const handleToggleFavorite = (item) => {
     ElMessage.success('已收藏')
   }
   favoriteIds.value = favorites
+}
+
+const getShareType = () => {
+  if (activeType.value === 'survey') return 'survey'
+  if (activeType.value === 'script') return 'script'
+  return 'suggestion'
+}
+
+const checkShareStatus = async () => {
+  if (items.value.length === 0) return
+  try {
+    const res = await request.get('/api/shares/my')
+    const shares = res.data?.items || []
+    sharedIds.value = shares
+      .filter(s => s.type === getShareType())
+      .map(s => s.resource_id)
+  } catch (e) {
+    console.error('检查分享状态失败:', e)
+  }
+}
+
+const isShared = (id) => {
+  return sharedIds.value.includes(id)
+}
+
+const handleToggleShare = async (item) => {
+  const type = getShareType()
+  try {
+    if (isShared(item.id)) {
+      // 取消分享
+      await request.delete(`/api/shares/${type}/${item.id}`)
+      ElMessage.success('已取消分享')
+      sharedIds.value = sharedIds.value.filter(id => id !== item.id)
+    } else {
+      // 分享
+      await request.post('/api/shares', {
+        resource_type: type,
+        resource_id: item.id
+      })
+      ElMessage.success('已分享到作品广场')
+      sharedIds.value.push(item.id)
+    }
+  } catch (e) {
+    ElMessage.error(isShared(item.id) ? '取消分享失败' : '分享失败')
+  }
 }
 
 defineExpose({ fetchData })

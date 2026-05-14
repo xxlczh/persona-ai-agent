@@ -17,6 +17,14 @@
               </div>
               <template #dropdown>
                 <el-dropdown-menu>
+                  <el-dropdown-item command="gallery">
+                    <el-icon><Collection /></el-icon>
+                    作品广场
+                  </el-dropdown-item>
+                  <el-dropdown-item command="my-shares">
+                    <el-icon><Share /></el-icon>
+                    我的分享
+                  </el-dropdown-item>
                   <el-dropdown-item command="profile">
                     <el-icon><User /></el-icon>
                     个人主页
@@ -108,7 +116,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowDown, User, SwitchButton, Star } from '@element-plus/icons-vue'
+import { ArrowDown, User, SwitchButton, Star, Collection, Share } from '@element-plus/icons-vue'
 import request from '@/api/request'
 import ProjectModeDialog from '@/components/ProjectModeDialog.vue'
 
@@ -159,6 +167,10 @@ const handleUserCommand = (command) => {
     router.push('/profile')
   } else if (command === 'favorites') {
     router.push('/favorites')
+  } else if (command === 'gallery') {
+    router.push('/gallery')
+  } else if (command === 'my-shares') {
+    router.push('/my-shares')
   } else if (command === 'logout') {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
