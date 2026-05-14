@@ -52,9 +52,9 @@ PromptTemplate.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 User.hasMany(Team, { foreignKey: 'owner_id', as: 'ownedTeams' });
 Team.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
 
-// Team 与 Project 关联 (一个团队对应一个项目)
+// Team 与 Project 关联 (一个团队对应一个项目，一个项目可以属于一个团队)
 Team.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
-Project.hasOne(Team, { foreignKey: 'project_id', as: 'team' });
+Project.belongsTo(Team, { foreignKey: 'team_id', as: 'team' });
 
 // TeamMember 关联
 Team.hasMany(TeamMember, { foreignKey: 'team_id', as: 'members' });

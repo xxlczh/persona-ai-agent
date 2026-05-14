@@ -46,6 +46,11 @@ const Project = sequelize.define('Project', {
     type: DataTypes.JSON,
     allowNull: true,
     defaultValue: []
+  },
+  team_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'team_id'
   }
 }, {
   tableName: 'projects',
