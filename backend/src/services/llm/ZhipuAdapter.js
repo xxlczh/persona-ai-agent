@@ -1,6 +1,6 @@
 /**
  * 智谱 GLM 适配器
- * 支持 GLM-4, GLM-3-Turbo 等模型
+ * 支持 GLM-5.1, GLM-4, GLM-3-Turbo 等模型
  */
 const axios = require('axios');
 const LLMProvider = require('./LLMProvider');
@@ -10,7 +10,7 @@ class ZhipuAdapter extends LLMProvider {
     super(config);
     this.name = 'zhipu';
     this.apiKey = config.apiKey || process.env.ZHIPU_API_KEY;
-    this.model = config.model || process.env.ZHIPU_MODEL || 'glm-4';
+    this.model = config.model || process.env.ZHIPU_MODEL || 'glm-5.1';
     this.baseURL = 'https://open.bigmodel.cn/api/paas/v4';
 
     this.client = axios.create({
@@ -52,6 +52,10 @@ class ZhipuAdapter extends LLMProvider {
       if (response.data.choices && response.data.choices.length > 0) {
         // GLM-5 可能返回 thinking 内容，需要过滤
         let content = response.data.choices[0].message.content;
+        // 过滤 markdown 代码块
+        if (content && content.includes('```')) {
+          content = content.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        }
         // 如果内容包含 ```search_and_answer 的块，过滤掉
         if (content && content.includes('```search_and_answer')) {
           content = content.replace(/```search_and_answer[\s\S]*?```/g, '');

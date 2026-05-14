@@ -1,6 +1,6 @@
 /**
  * MiniMax 适配器
- * 支持 MiniMax-Text-01 等模型
+ * 支持 MiniMax 2.7 等模型
  */
 const axios = require('axios');
 const LLMProvider = require('./LLMProvider');
@@ -10,7 +10,7 @@ class MiniMaxAdapter extends LLMProvider {
     super(config);
     this.name = 'minimax';
     this.apiKey = config.apiKey || process.env.MINIMAX_API_KEY;
-    this.model = config.model || process.env.MINIMAX_MODEL || 'Minimax-Text-01';
+    this.model = config.model || process.env.MINIMAX_MODEL || 'MiniMax-M2.7';
     this.baseURL = 'https://api.minimax.chat/v1';
 
     this.client = axios.create({
@@ -43,7 +43,18 @@ class MiniMaxAdapter extends LLMProvider {
       const response = await this.client.post('/chat/completions', payload);
 
       if (response.data.choices && response.data.choices.length > 0) {
-        return response.data.choices[0].message.content;
+        let content = response.data.choices[0].message.content;
+        // 过滤思考过程标签 <think>...</think>
+        const openTag = '<think>';
+        const closeTag = '</think>';
+        const openIdx = content.indexOf(openTag);
+        const closeIdx = content.indexOf(closeTag);
+        if (openIdx !== -1 && closeIdx !== -1) {
+          content = content.substring(0, openIdx) + content.substring(closeIdx + closeTag.length);
+        }
+        // 清理其他残留标签
+        content = content.replace(/<[^>]*>/g, '').trim();
+        return content;
       }
 
       throw new Error('No response from MiniMax');
@@ -113,7 +124,7 @@ class MiniMaxAdapter extends LLMProvider {
    */
   async listModels() {
     return [
-      { id: 'Minimax-Text-01', name: 'MiniMax Text 01' }
+      { id: 'MiniMax-M2.7', name: 'MiniMax M2.7' }
     ];
   }
 
