@@ -215,11 +215,25 @@ router.get('/:id', authenticate, async (req, res) => {
     const isAdmin = req.user.role === 'admin';
     let isTeamMember = false;
 
+    // 检查方式1: 项目直接关联的团队 (Project.team_id)
     if (project.team_id) {
       const membership = await TeamMember.findOne({
         where: { team_id: project.team_id, user_id: req.user.id }
       });
       isTeamMember = !!membership;
+    }
+
+    // 检查方式2: 通过 Team.project_id 关联的团队 (旧的关联方式)
+    if (!isTeamMember) {
+      const teamWithProject = await Team.findOne({
+        where: { project_id: project.id }
+      });
+      if (teamWithProject) {
+        const membership = await TeamMember.findOne({
+          where: { team_id: teamWithProject.id, user_id: req.user.id }
+        });
+        isTeamMember = !!membership;
+      }
     }
 
     if (!isOwner && !isAdmin && !isTeamMember) {
